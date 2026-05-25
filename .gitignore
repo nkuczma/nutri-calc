@@ -1,5 +1,3 @@
-.claude/
-
 # from next
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
@@ -46,4 +44,7 @@ next-env.d.ts
 # cloudflare workers build output
 .open-next/
 
-AGENTS.md
+.claude/**/10x-*
+.github/**/10x-*
+.agents/**/10x-*
+.10x-**
