@@ -1,19 +1,4 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "npm run lint",
-            "timeout": 60,
-            "statusMessage": "Linting..."
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Bash(npm *)",
@@ -42,5 +27,24 @@
       "Bash(git push *)",
       "Bash(git push)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "cloudflare"
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run lint",
+            "timeout": 60,
+            "statusMessage": "Linting..."
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true
 }
