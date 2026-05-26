@@ -16,7 +16,9 @@
       "Edit",
       "Write",
       "Bash(Get-ChildItem -Name)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(gh issue create --title '[S-04] List saved recipes chronologically' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)",
+      "Bash(gh issue create --title '[S-06] Delete a saved recipe \\(cascade delete ingredients\\)' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)"
     ],
     "deny": [
       "Bash(rm -rf *)"
@@ -28,6 +30,7 @@
       "Bash(git push)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "cloudflare"
   ],
@@ -45,6 +48,5 @@
         ]
       }
     ]
-  },
-  "enableAllProjectMcpServers": true
+  }
 }
