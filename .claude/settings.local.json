@@ -1,19 +1,4 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "npm run lint",
-            "timeout": 60,
-            "statusMessage": "Linting..."
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Bash(npm *)",
@@ -31,7 +16,9 @@
       "Edit",
       "Write",
       "Bash(Get-ChildItem -Name)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(gh issue create --title '[S-04] List saved recipes chronologically' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)",
+      "Bash(gh issue create --title '[S-06] Delete a saved recipe \\(cascade delete ingredients\\)' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)"
     ],
     "deny": [
       "Bash(rm -rf *)"
@@ -41,6 +28,25 @@
       "Bash(wget *)",
       "Bash(git push *)",
       "Bash(git push)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "cloudflare"
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run lint",
+            "timeout": 60,
+            "statusMessage": "Linting..."
+          }
+        ]
+      }
     ]
   }
 }

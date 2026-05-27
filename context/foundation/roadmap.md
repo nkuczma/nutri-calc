@@ -1,0 +1,219 @@
+---
+project: NutriCalc
+version: 1
+status: draft
+created: 2026-05-25
+updated: 2026-05-25
+prd_version: 1
+main_goal: speed
+top_blocker: time
+---
+
+# Roadmap: NutriCalc
+
+> Derived from `context/foundation/prd.md` (v1) + auto-researched codebase baseline (2026-05-25).
+> Edit-in-place; archive when superseded.
+> Slices below are listed in dependency order. The "At a glance" table is the index.
+
+## Vision recap
+
+NutriCalc parses pasted recipe text via AI, fetches per-ingredient nutritional data from an external source, and shows a recipe-level summary where every nutrient is either a value or an explicit "missing" flag. The core differentiator is transparency: where competing dietary apps silently fill missing micronutrient data with zeros, NutriCalc surfaces the gap so users know exactly what their totals are based on. Solo 3-week MVP, after-hours, hard deadline 2026-07-05.
+
+## North star
+
+**S-01: paste-parse-summary** — A signed-in cook pastes recipe text, gets an editable AI-parsed ingredient list, and sees the full nutritional summary with explicit missing-data flags.
+
+> North star — the smallest end-to-end slice whose successful delivery would prove the core product premise. Placed as early as Prerequisites allow because everything else (save, list, edit, delete) only matters once this loop works. The core product premise here: that an AI parse of pasted recipe text plus a nutritional summary with transparent missing-data flags solves the home cook's pain better than manual entry into apps that silently zero-fill missing micronutrients.
+
+Why this slice is the first end-to-end proof: it hits the primary Success Criterion (≥75% of recipes submitted via AI path), the secondary (≥75% accepted without major correction), and the differentiator guardrail (missing flags shown explicitly). Sequenced immediately after F-01 (auth) and F-02 (nutrition source); save and the rest of the recipe lifecycle follow once this loop is trusted.
+
+## At a glance
+
+| ID    | Change ID                | Outcome (user can …)                                                                                | Prerequisites    | PRD refs                          | Status   |
+| ----- | ------------------------ | --------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
+| F-01  | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                 | —                | FR-001, NFR data isolation, Access Control | ready    |
+| F-02  | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced          | —                | FR-005, FR-006, Open Q #1, NFR reproducibility | blocked  |
+| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | proposed |
+| S-01  | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags | F-01, F-02 | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | proposed |
+| S-02  | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary       | F-01, F-02       | FR-004, FR-005, FR-006            | proposed |
+| S-03  | save-recipe              | save a parsed or manually-created recipe to their account                                           | S-01, F-03       | FR-007, NFR data isolation        | proposed |
+| S-04  | list-saved-recipes       | view their saved recipes in chronological order                                                     | S-03             | FR-008, NFR data isolation        | proposed |
+| S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | blocked  |
+| S-06  | delete-saved-recipe      | delete a saved recipe                                                                               | S-04             | FR-010                            | proposed |
+
+## Streams
+
+Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
+
+| Stream | Theme                  | Chain                                  | Note                                                                                              |
+| ------ | ---------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| A      | Gated AI loop          | `F-01` → `S-01` → `S-02`               | Critical path under `main_goal: speed`. F-01 unblocks every signed-in slice; S-01 is the north star; S-02 is the fallback creation path. |
+| B      | Nutrition pipeline     | `F-02`                                 | Standalone foundation. Joins Stream A at `S-01` and `S-02`. Blocked on Open Q #1 (nutrition source). |
+| C      | Recipe lifecycle       | `F-03` → `S-03` → `S-04` → `S-05` / `S-06` | Persistence + management. `S-05` and `S-06` run in parallel after `S-04`. Joins Stream A at `S-03` (recipe payload comes from S-01 / S-02). |
+
+## Baseline
+
+What's already in place in the codebase as of 2026-05-25 (auto-researched + user-confirmed).
+Foundations below assume these are present and do NOT re-scaffold them.
+
+- **Frontend:** present — Next.js 16 App Router + Tailwind 4 scaffold; `src/app/layout.tsx`, `src/app/page.tsx` placeholder. No component library wired.
+- **Backend / API:** partial — single demo `src/app/api/messages/route.ts` exists; no Server Actions, no recipe handlers.
+- **Data:** partial — Supabase JS client wired (`src/lib/supabase.ts`); only a demo `messages` table referenced. No migrations, no recipe schema.
+- **Auth:** partial — `@supabase/supabase-js` installed; no `@supabase/ssr`, no OAuth flow, no callback route, no middleware, no sign-in UI.
+- **Deploy / infra:** present — `wrangler.jsonc` + `@opennextjs/cloudflare` v1.19.11 + `build:worker` / `deploy` scripts + `.github/workflows/deploy.yml` auto-deploy on push to main.
+- **Observability:** absent — no logger, no Sentry/Datadog/OTel, no structured logs.
+- **AI parsing:** absent — no LLM SDK, no prompt, no parse Server Action.
+- **Nutrition API:** absent — no client, no provider chosen (PRD Open Q #1).
+
+## Foundations
+
+### F-01: Auth scaffold (Supabase OAuth)
+
+- **Outcome:** (foundation) OAuth sign-in via Google / GitHub landed; session issued and verified in the Workers runtime; route protection middleware in place; `auth.uid()` available for RLS downstream.
+- **Change ID:** auth-supabase-oauth
+- **PRD refs:** FR-001, NFR data isolation, Access Control section
+- **Unlocks:** S-01 (north star), S-02, S-03, S-04, S-05, S-06; also enables RLS policies authored in F-03.
+- **Prerequisites:** —
+- **Parallel with:** F-02
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Critical-path foundation for the north star. Per `infrastructure.md` risk register, Supabase Auth in the Workers runtime requires `@supabase/ssr` with an edge-compatible cookie handler; the default `@supabase/auth-helpers-nextjs` will silently fail. Wrong package choice burns days debugging cookie/session round-trips.
+- **Status:** ready
+
+### F-02: Nutrition data source decision + client
+
+- **Outcome:** (foundation) external nutrition data source chosen (Open Food Facts, USDA FoodData Central, or Edamam), client wired with a typed interface, and missing-flag contract enforced at the integration boundary — values returned as `value | "missing"`, never silently zeroed.
+- **Change ID:** nutrition-data-source
+- **PRD refs:** FR-005, FR-006, Open Q #1, NFR reproducibility, Critical Invariant (CLAUDE.md)
+- **Unlocks:** S-01 (north star), S-02; transitively the summary recompute path used by S-04 and S-05.
+- **Prerequisites:** —
+- **Parallel with:** F-01
+- **Blockers:** —
+- **Unknowns:**
+  - Which external nutrition data source will the product use? Candidates: Open Food Facts (free, broadest), USDA FoodData Central (free, US-centric), Edamam (freemium, ingredient-matching). The choice changes micronutrient coverage breadth, missing-data frequency, and the ingredient-matching contract. Owner: user. Block: yes.
+- **Risk:** This foundation gates two slices (S-01 and S-02). Picking late means parsed ingredients have nowhere to send. Picking the wrong source means re-implementing the client mid-MVP — under `main_goal: speed`, that re-work costs more than the missing-coverage trade-off.
+- **Status:** blocked
+
+### F-03: Recipes schema + RLS
+
+- **Outcome:** (foundation) `recipes` and `recipe_ingredients` tables in Supabase with RLS policies gating every row by `auth.uid()`; schema models a per-ingredient nutrient snapshot that distinguishes `value` from `missing`.
+- **Change ID:** recipes-schema-rls
+- **PRD refs:** FR-007, NFR data isolation, Critical Invariant (missing-flag preservation)
+- **Unlocks:** S-03 (save), S-04 (list), S-05 (edit), S-06 (delete); also the verification path for the data-isolation NFR (a regression test that user-A cannot read user-B's recipe under any URL).
+- **Prerequisites:** F-01
+- **Parallel with:** S-01, S-02 (the persistence layer can be designed while the ephemeral flow ships)
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** RLS policies enforce the data-isolation NFR under every code path — a weak policy is a security incident in production. Schema must encode the missing-flag invariant at the column level (e.g., nullable nutrient columns + a `missing_nutrients text[]` column, or a JSONB blob with explicit `null` semantics) so neither the ORM nor the application code can silently default to zero.
+- **Status:** proposed
+
+## Slices
+
+### S-01: paste-parse-summary (north star)
+
+- **Outcome:** user can paste raw recipe text, see an editable AI-parsed ingredient list with name / quantity / unit, correct any line inline, and see the full nutritional summary with every nutrient either shown as a value or explicitly flagged missing — all under 5 seconds perceived response time.
+- **Change ID:** paste-parse-summary
+- **PRD refs:** US-01, FR-002, FR-003, FR-005, FR-006, NFR response time
+- **Prerequisites:** F-01, F-02
+- **Parallel with:** F-03
+- **Blockers:** —
+- **Unknowns:**
+  - Will the AI parse + nutrition lookup combined fit inside the Workers CPU time limit (30 ms paid tier)? `infrastructure.md` pre-mortem calls this out — large JSON deserialization from OpenRouter can push CPU above the cap. Owner: implementer (verify during planning of S-01). Block: no — surfaces during /10x-plan, mitigated by streaming the response.
+- **Risk:** Riskiest slice in the project. Failure of either the AI parse or the nutrition lookup invalidates the primary Success Criterion. Both must hit the < 5 s NFR together. Prompt design (structured output schema for ingredient + quantity + unit) is the load-bearing piece — a hallucinated quantity is worse than a manual entry.
+- **Status:** proposed
+
+### S-02: manual-recipe-entry
+
+- **Outcome:** user can create a recipe from scratch by entering ingredients (name, quantity, unit) into a form without the AI path, and see the same nutritional summary with explicit missing flags.
+- **Change ID:** manual-recipe-entry
+- **PRD refs:** FR-004, FR-005, FR-006
+- **Prerequisites:** F-01, F-02
+- **Parallel with:** S-01, F-03
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Lower-risk fallback path. Reuses the nutritional summary rendering from S-01 and the F-02 nutrition client. Primary failure mode is divergence — if S-01 and S-02 render the summary differently, the missing-flag contract becomes a code-path question rather than an invariant. Mitigation: share the summary component between both creation paths.
+- **Status:** proposed
+
+### S-03: save-recipe
+
+- **Outcome:** user can save a recipe (parsed or manually entered) to their account; the saved recipe persists across sessions and devices.
+- **Change ID:** save-recipe
+- **PRD refs:** FR-007, NFR data isolation, NFR no recipe data loss
+- **Prerequisites:** S-01, F-03
+- **Parallel with:** —
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** First non-demo DB write in the codebase. Verification gate: a regression test must confirm user-A cannot read or modify user-B's saved recipe under URL manipulation or request-parameter tampering (NFR + PRD Success Criteria Guardrail). The missing-flag contract must round-trip — load(save(recipe)) must preserve every "missing" marker.
+- **Status:** proposed
+
+### S-04: list-saved-recipes
+
+- **Outcome:** user can view their saved recipes in chronological order, scoped to their own account.
+- **Change ID:** list-saved-recipes
+- **PRD refs:** FR-008, NFR data isolation
+- **Prerequisites:** S-03
+- **Parallel with:** —
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Scoped explicitly — chronological list only, no search and no filter for MVP (PRD §FR-008 carve-out). RLS scope: the list query must be filtered by `auth.uid()` and validated against the same data-isolation regression suite as S-03.
+- **Status:** proposed
+
+### S-05: edit-saved-recipe
+
+- **Outcome:** user can edit the ingredient list of a saved recipe — direct field edits to name, quantity, or unit — with the nutritional summary recomputing accordingly. No AI re-parse on edit.
+- **Change ID:** edit-saved-recipe
+- **PRD refs:** FR-009, FR-005, FR-006
+- **Prerequisites:** S-04
+- **Parallel with:** S-06
+- **Blockers:** —
+- **Unknowns:**
+  - When the user edits an ingredient (e.g., changes "salmon" to "tuna"), does the per-ingredient nutritional snapshot re-fetch from F-02's client at view-time, or stay frozen at save-time? PRD NFR reproducibility says "same ingredient list always produces the same result" — that argues for re-fetching on edit so the same final ingredient list always recomputes the same totals. Owner: user. Block: yes.
+- **Risk:** Edit semantics are scoped down (no AI re-parse), but the nutrition recompute question is load-bearing — get it wrong and the summary drifts from the displayed ingredient list, violating the core trust contract.
+- **Status:** blocked
+
+### S-06: delete-saved-recipe
+
+- **Outcome:** user can delete a saved recipe; the deletion cascades to all per-ingredient rows.
+- **Change ID:** delete-saved-recipe
+- **PRD refs:** FR-010
+- **Prerequisites:** S-04
+- **Parallel with:** S-05
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Table-stakes for user-owned data. The only sequencing concern: cascade rule at the DB level (`recipe_ingredients` rows deleted when parent `recipes` row is deleted) — handled in F-03's schema, not deferred to application code.
+- **Status:** proposed
+
+## Backlog Handoff
+
+| Roadmap ID | Change ID                | Suggested issue title                                                       | Ready for `/10x-plan` | Notes                                                                                               |
+| ---------- | ------------------------ | --------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                   | yes                   | Run `/10x-plan auth-supabase-oauth`. Use `@supabase/ssr`, not `auth-helpers-nextjs`.                |
+| F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                            | no                    | Blocked on Open Roadmap Question #1.                                                                |
+| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | no                    | Waits on F-01. Can be planned once F-01 is in flight.                                               |
+| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | no                    | Waits on F-01 + F-02. Highest-risk slice; verify CPU-time budget during planning.                   |
+| S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | no                    | Waits on F-01 + F-02. Share summary component with S-01.                                            |
+| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | no                    | Waits on S-01 + F-03. Data-isolation regression test required.                                      |
+| S-04       | list-saved-recipes       | List saved recipes chronologically                                          | no                    | Waits on S-03. No search / filter for MVP.                                                          |
+| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Blocked on Open Roadmap Question #2 (nutrition re-fetch on edit).                                   |
+| S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | no                    | Waits on S-04. Parallel with S-05.                                                                  |
+
+## Open Roadmap Questions
+
+1. **Which external nutrition data source will the product use?** — Candidates: Open Food Facts (free, broadest coverage, community-curated), USDA FoodData Central (free, US-centric, authoritative on whole foods), Edamam (freemium, ingredient-matching by name). The choice changes micronutrient coverage breadth, missing-data frequency, and the ingredient-matching contract. Owner: user. Block: F-02, S-01, S-02 (transitively S-03–S-06 since saved recipes carry nutrition snapshots).
+2. **On editing a saved recipe ingredient, does the nutritional summary re-fetch nutrition data from F-02 or stay frozen at save-time?** — PRD NFR reproducibility ("same ingredient list always produces the same result") suggests re-fetch at view-time; cached snapshot is faster but violates reproducibility when an ingredient line is changed. Owner: user. Block: S-05.
+
+## Parked
+
+- **Per-serving scaling** — Why parked: PRD §Non-Goals. Totals are for the recipe as written; serving math is post-MVP.
+- **Custom ingredient database or mapping algorithm** — Why parked: PRD §Non-Goals. Use an existing external source; do not build proprietary matching.
+- **Languages other than English** — Why parked: PRD §Non-Goals. English-only for v1.
+- **Recipe sharing between users** — Why parked: PRD §Non-Goals. Recipes are private to their owner.
+- **Mobile apps** — Why parked: PRD §Non-Goals. Web-only for v1 (desktop browsers only per NFR).
+- **Search and filter on recipe list** — Why parked: PRD §FR-008 carve-out. Chronological list only for MVP.
+- **AI re-parse on edit** — Why parked: PRD §FR-009 carve-out. Direct field edits only on saved recipes.
+- **Observability / structured logging** — Why parked: not in PRD NFRs and `main_goal: speed` defers it. Worth revisiting before launch if the missing-flag invariant needs production-side verification.
+- **Per-ingredient nutrition cache** — Why parked: `shape-notes.md` Forward note flags this as a 10k-user concern; not a v1 issue at dozens-to-hundreds scale.
+
+## Done
+
+(Empty on first generation. `/10x-archive` appends here when a change whose Change ID matches a roadmap item is archived.)
