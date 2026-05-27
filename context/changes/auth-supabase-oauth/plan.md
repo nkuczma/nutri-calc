@@ -300,29 +300,29 @@ The middleware runs on every non-static request. `supabase.auth.getUser()` makes
 
 #### Automated
 
-- [x] 2.1 Build passes: `npm run build`
-- [x] 2.2 TypeScript compiles: `npx tsc --noEmit`
-- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Build passes: `npm run build` — 4d742fa
+- [x] 2.2 TypeScript compiles: `npx tsc --noEmit` — 4d742fa
+- [x] 2.3 Linting passes: `npm run lint` — 4d742fa
 
 #### Manual
 
-- [x] 2.4 Unauthenticated visit to a non-public route redirects to `/sign-in`
-- [x] 2.5 Unauthenticated visit to `/` loads without redirect
-- [x] 2.6 Unauthenticated visit to `/sign-in` loads without redirect loop
+- [x] 2.4 Unauthenticated visit to a non-public route redirects to `/sign-in` — 4d742fa
+- [x] 2.5 Unauthenticated visit to `/` loads without redirect — 4d742fa
+- [x] 2.6 Unauthenticated visit to `/sign-in` loads without redirect loop — 4d742fa
 
 ### Phase 3: Auth Flow — Sign-in Page, Callback, Home Page, Sign-out
 
 #### Automated
 
-- [ ] 3.1 Build passes: `npm run build`
-- [ ] 3.2 TypeScript compiles: `npx tsc --noEmit`
-- [ ] 3.3 Linting passes: `npm run lint`
-- [ ] 3.4 All four new/modified auth files exist
+- [x] 3.1 Build passes: `npm run build`
+- [x] 3.2 TypeScript compiles: `npx tsc --noEmit`
+- [x] 3.3 Linting passes: `npm run lint`
+- [x] 3.4 All four new/modified auth files exist
 
 #### Manual
 
-- [ ] 3.5 Full Google OAuth sign-in flow completes; email visible on home page
-- [ ] 3.6 Sign-out clears session; home page shows landing
-- [ ] 3.7 Session survives page refresh
-- [ ] 3.8 Route guard redirects unauthenticated user to `/sign-in`
-- [ ] 3.9 `/sign-in?error=oauth_failed` displays an error message
+- [x] 3.5 Full Google OAuth sign-in flow completes; email visible on home page
+- [x] 3.6 Sign-out clears session; home page shows landing
+- [x] 3.7 Session survives page refresh
+- [x] 3.8 Route guard redirects unauthenticated user to `/sign-in`
+- [x] 3.9 `/sign-in?error=oauth_failed` displays an error message
