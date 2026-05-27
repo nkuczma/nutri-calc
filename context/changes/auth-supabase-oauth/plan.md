@@ -26,6 +26,7 @@ This is roadmap foundation **F-01** (`auth-supabase-oauth`), the prerequisite fo
 ## Desired End State
 
 A deployed (or `wrangler dev`) NutriCalc where:
+
 1. Visiting `/` while signed out redirects to `/login`.
 2. `/login` shows a "Continue with Google" button (and a plain error banner if `?error=<code>` is present).
 3. Clicking it completes Google OAuth and returns to `/`, which displays the signed-in email and a "Sign out" button.
@@ -52,7 +53,7 @@ The three-client split is the canonical `@supabase/ssr` App Router pattern: a **
 
 ## Critical Implementation Details
 
-- **Proxy cookie write-back is load-bearing.** The proxy's server client must be constructed with a `setAll` that writes cookies onto **both** the request (so downstream sees them) and the `NextResponse` it returns. If the proxy returns a *new* response object without copying these cookies, the refreshed session is silently dropped — this is the exact "cookies don't survive the round-trip" failure the infrastructure doc warns about. The returned response from the proxy must be the same object whose cookies were set.
+- **Proxy cookie write-back is load-bearing.** The proxy's server client must be constructed with a `setAll` that writes cookies onto **both** the request (so downstream sees them) and the `NextResponse` it returns. If the proxy returns a _new_ response object without copying these cookies, the refreshed session is silently dropped — this is the exact "cookies don't survive the round-trip" failure the infrastructure doc warns about. The returned response from the proxy must be the same object whose cookies were set.
 - **`getUser()` not `getSession()` in the proxy and on `/`.** `getSession()` reads the cookie without validating it against the Auth server; `getUser()` validates and triggers refresh. Use `getUser()` for any security decision.
 - **OAuth `redirectTo` must be an absolute URL on the current origin.** Compute it from the request origin (e.g. `${origin}/auth/callback`) rather than hardcoding, so the same code works in `wrangler dev` (localhost) and on the deployed Worker. The origin must also be registered in Supabase Auth's redirect allowlist (Phase 0).
 - **The callback exchanges `code` then redirects.** `/auth/callback` reads `code` from the query string, calls `exchangeCodeForSession(code)` on a server client, and on success redirects to the `next` param (default `/`); on failure redirects to `/login?error=oauth_failed`.
@@ -145,18 +146,19 @@ Install `@supabase/ssr`, replace the insecure singleton with three cookie-aware 
 **Intent**: `proxy.ts` is the Next.js 16 proxy entrypoint (formerly middleware). It builds a server client bound to the incoming request/outgoing response, calls `getUser()` to validate+refresh the session, then redirects unauthenticated requests to `/login`. `src/lib/supabase/proxy.ts` holds the reusable client-construction + session-refresh helper so `proxy.ts` stays thin.
 
 **Contract**:
+
 - `src/lib/supabase/proxy.ts` exports a helper (e.g. `updateSession(request: NextRequest)`) that returns `{ response, user }`. Its `setAll` writes cookies onto both `request.cookies` and the `NextResponse`, and **returns that same response object** (see Critical Implementation Details — dropping this breaks the cookie round-trip).
 - `src/proxy.ts` exports default `proxy(request)` and `config.matcher`. Logic: run `updateSession`; if `!user` and the path is not `/login` and does not start with `/auth`, redirect to `/login`. Matcher excludes static assets: `['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)']`.
 
 ```ts
 // src/proxy.ts — gate logic (the one non-obvious ordering)
-const { response, user } = await updateSession(request)
-const { pathname } = request.nextUrl
-const isPublic = pathname === '/login' || pathname.startsWith('/auth')
+const { response, user } = await updateSession(request);
+const { pathname } = request.nextUrl;
+const isPublic = pathname === "/login" || pathname.startsWith("/auth");
 if (!user && !isPublic) {
-  return NextResponse.redirect(new URL('/login', request.url))
+  return NextResponse.redirect(new URL("/login", request.url));
 }
-return response // must be the response whose cookies updateSession set
+return response; // must be the response whose cookies updateSession set
 ```
 
 #### 5. Stub `/login` page
@@ -187,7 +189,7 @@ return response // must be the response whose cookies updateSession set
 
 #### Manual Verification:
 
-- Via `npm run preview` (opennextjs build + `wrangler dev` on the built Worker — the Workers runtime, NOT `next dev`): visiting `/` while signed out redirects to `/login`. This validates the OpenNext-bundled proxy, the riskiest integration; `next dev` runs `proxy.ts` natively and would not exercise it.
+- Via `npm run build:worker` and `npm run preview` (opennextjs build + `wrangler dev` on the built Worker — the Workers runtime, NOT `next dev`): visiting `/` while signed out redirects to `/login`. This validates the OpenNext-bundled proxy, the riskiest integration; `next dev` runs `proxy.ts` natively and would not exercise it.
 - `/login` renders the stub heading without errors
 - `/auth/anything` is not redirected (reachable, even if it 404s for now)
 - The `messages` table has been dropped in Supabase Studio
@@ -210,7 +212,7 @@ Implement the real sign-in: a Google button on `/login`, the `/auth/callback` PK
 
 **Intent**: Client Component that, on click, creates a browser client and calls `signInWithOAuth` for Google, redirecting to the returned provider URL.
 
-**Contract**: `'use client'`. Calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: \`${location.origin}/auth/callback\` } })`. Renders a button labeled "Continue with Google". Must use the `createClient` from `src/lib/supabase/browser.ts` (`@supabase/ssr`'s cookie-based `createBrowserClient`) — NOT `@supabase/supabase-js` (localStorage default). The PKCE code verifier must be stored in a cookie so the `/auth/callback` server handler can read it; a localStorage-backed client would break `exchangeCodeForSession`.
+**Contract**: `'use client'`. Calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: \`${location.origin}/auth/callback\` } })`. Renders a button labeled "Continue with Google". Must use the `createClient`from`src/lib/supabase/browser.ts` (`@supabase/ssr`'s cookie-based `createBrowserClient`) — NOT `@supabase/supabase-js`(localStorage default). The PKCE code verifier must be stored in a cookie so the`/auth/callback`server handler can read it; a localStorage-backed client would break`exchangeCodeForSession`.
 
 #### 2. Login page with error banner
 
@@ -303,20 +305,20 @@ The proxy runs `getUser()` on every matched request, which makes an Auth-server 
 
 #### Manual
 
-- [ ] 0.1 Google OAuth client created with Supabase callback URL as authorized redirect URI
-- [ ] 0.2 Supabase Google provider enabled with client ID/secret
-- [ ] 0.3 Supabase redirect allowlist includes localhost (dev) and deployed worker `/auth/callback`
-- [ ] 0.4 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in Cloudflare dashboard and `.env.local`
+- [x] 0.1 Google OAuth client created with Supabase callback URL as authorized redirect URI
+- [x] 0.2 Supabase Google provider enabled with client ID/secret
+- [x] 0.3 Supabase redirect allowlist includes localhost (dev) and deployed worker `/auth/callback`
+- [x] 0.4 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in Cloudflare dashboard and `.env.local`
 
 ### Phase 1: Workers-Safe Supabase Plumbing
 
 #### Automated
 
-- [ ] 1.1 `@supabase/ssr` present in `package.json` dependencies
-- [ ] 1.2 No references to the old `@/lib/supabase` singleton remain
-- [ ] 1.3 Type check passes: `npx tsc --noEmit`
-- [ ] 1.4 Lint passes: `npm run lint`
-- [ ] 1.5 Worker build succeeds: `npm run build:worker`
+- [x] 1.1 `@supabase/ssr` present in `package.json` dependencies
+- [x] 1.2 No references to the old `@/lib/supabase` singleton remain
+- [x] 1.3 Type check passes: `npx tsc --noEmit`
+- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.5 Worker build succeeds: `npm run build:worker`
 
 #### Manual
 
