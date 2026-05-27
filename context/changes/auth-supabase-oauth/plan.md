@@ -1,342 +1,328 @@
-# Wire Supabase OAuth (Google) for Workers Runtime — Implementation Plan
+# Auth Scaffold (Supabase OAuth) Implementation Plan
 
 ## Overview
 
-Establish authentication for NutriCalc on Cloudflare Workers using `@supabase/ssr`. After this change, an unauthenticated visitor to any route is redirected to `/login`, can sign in with Google, lands back on a protected home page that displays their email, and can sign out. The authenticated session round-trips through HTTP-only cookies, is refreshed in `proxy.ts` on every request, and exposes `auth.uid()` server-side for the RLS policies F-03 will author.
-
-This is roadmap foundation **F-01** (`auth-supabase-oauth`), the prerequisite for every signed-in slice (S-01 north star through S-06).
+Wire Google OAuth sign-in via Supabase using `@supabase/ssr` — the only Supabase package whose cookie handler is compatible with the Cloudflare Workers edge runtime. Delivers session management, route protection middleware, a sign-in page, an OAuth callback handler, and minimal user presence display on the home page. This is the critical-path foundation (F-01) that `auth.uid()` requires for every downstream slice.
 
 ## Current State Analysis
 
-- **Supabase client is a bare singleton.** `src/lib/supabase.ts:3` calls `createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)` from `@supabase/supabase-js` at module scope. It has no cookie handling, no session persistence, and is shared between server and (potentially) browser. This pattern **cannot** carry an auth session in the Workers runtime.
-- **Only one consumer.** `src/app/api/messages/route.ts` imports that singleton to read/write a demo `messages` table. Nothing in the PRD or roadmap depends on it.
-- **No auth surface exists.** No `proxy.ts`/middleware, no `/login`, no `/auth/*` routes, no protected pages. `src/app/page.tsx` is a static placeholder; `src/components/` is empty.
-- **Workers runtime is already configured correctly.** `wrangler.jsonc` has `compatibility_date: "2025-04-01"` (required for `process.env` to surface dashboard vars) and `compatibility_flags: ["nodejs_compat"]`. Deployment is `@opennextjs/cloudflare` v1.19.11.
-- **`.env.local` holds only** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. No service-role key (not needed for this slice — anon key + RLS is the model).
-- **`@supabase/ssr` is not installed.** `@supabase/supabase-js@^2.106.1` is present; `@supabase/ssr@0.10.3` is available on npm.
-
-### Key Discoveries:
-
-- **Next.js 16 renamed Middleware to Proxy.** Per `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md:15`: "Starting with Next.js 16, Middleware is now called Proxy." The file is `proxy.ts` at project root or in `src/`, exporting a default or named `proxy` function plus a `config.matcher`. Proxy runs on the Node.js runtime (proxy doc), which is compatible with `@supabase/ssr`'s cookie adapter.
-- **`@supabase/auth-helpers-nextjs` must NOT be used.** `context/foundation/infrastructure.md:83,112` flags it as silently broken in the Workers runtime. Use `@supabase/ssr` with `getAll`/`setAll` cookie handlers everywhere.
-- **The session must be refreshed in the proxy via `getUser()`.** The canonical Supabase SSR pattern: the proxy builds a server client bound to the incoming request/outgoing response cookies, calls `supabase.auth.getUser()` (which validates and refreshes the token), and lets the client's `setAll` write refreshed cookies onto the response. Calling `getUser()` (not `getSession()`) is what forces the Auth server validation.
-- **OAuth uses PKCE and is browser-initiated.** `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })` must run in the browser so the PKCE code verifier is stored client-side; it returns a provider URL to redirect to. The provider then calls back to `/auth/callback?code=...`, which exchanges the code for a session server-side via `exchangeCodeForSession`.
-- **Auth checks belong close to the data, not only in the proxy.** Per `node_modules/next/dist/docs/01-app/02-guides/authentication.md:1119`, the proxy is an optimistic gate; the authoritative `getUser()` check happens in the page/route handler. This slice does both: proxy redirect + server-side `getUser()` on `/`.
+- `@supabase/supabase-js` v2.106.1 installed; `@supabase/ssr` **not** installed.
+- `src/lib/supabase.ts` — a single browser-only `createClient()` call. Incompatible with server-side session handling; cannot set cookies in Server Components, Route Handlers, or middleware.
+- `src/app/api/messages/route.ts` — imports the soon-to-be-deleted browser client.
+- `src/app/page.tsx` — bare placeholder; no auth awareness.
+- No middleware, no sign-in route, no OAuth callback route.
+- Supabase project URL and anon key already present in `.env.local`.
 
 ## Desired End State
 
-A deployed (or `wrangler dev`) NutriCalc where:
-1. Visiting `/` while signed out redirects to `/login`.
-2. `/login` shows a "Continue with Google" button (and a plain error banner if `?error=<code>` is present).
-3. Clicking it completes Google OAuth and returns to `/`, which displays the signed-in email and a "Sign out" button.
-4. "Sign out" clears the session and returns to `/login`.
-5. Re-visiting `/` after sign-out redirects to `/login` again.
-6. `lint`, type-check, and `build:worker` all pass.
+After this plan, a visitor to the app:
 
-Verify by running the manual flow in `wrangler dev` and once on a deployed Worker (the cookie round-trip is the highest-risk failure mode and only fully exercised on the real runtime).
+1. Lands on `/` and sees a "Sign in with Google" prompt if unauthenticated.
+2. Clicks the button, is redirected through Google OAuth, lands back at `/auth/callback`, session is set, and lands on `/` where their email address and a "Sign out" button are visible.
+3. Any future route outside `["/", "/sign-in", "/auth/**"]` is gated by middleware — unauthenticated visitors are redirected to `/sign-in`.
+4. Signing out clears the session and returns the user to `/sign-in`.
+
+### Key Discoveries
+
+- `src/lib/supabase.ts:1-6` — browser-only client; will be deleted entirely and replaced by two SSR-aware factory functions.
+- `src/app/api/messages/route.ts:3` — imports the deleted file; must be updated to the server client.
+- The roadmap risk note (`context/foundation/roadmap.md:80`) calls out that `auth-helpers-nextjs` silently fails in Workers — `@supabase/ssr` is the only correct package here.
+- Next.js 16 (building on Next.js 15 conventions): `cookies()` from `next/headers` is **async** — must be awaited before passing to `createServerClient`.
+- `@supabase/ssr` uses PKCE by default; the callback route must call `exchangeCodeForSession(code)`, not pull a token from the URL hash.
 
 ## What We're NOT Doing
 
-- **GitHub provider** — deferred to a fast-follow change despite FR-001 naming both Google and GitHub. The second provider is ~10 lines once Google works; sequencing per user's call. Tracked as a follow-up.
-- **RLS policies / database tables** — F-03 (`recipes-schema-rls`) owns the recipes schema and RLS. This slice only proves `auth.uid()` is reachable server-side; it ships no protected tables.
-- **A test runner** — PRD has no test-coverage NFR and `main_goal: speed`. Verification is manual. The next slice with business logic can introduce Vitest.
-- **A public marketing landing page** — `/` is auth-gated. A `(public)` route group can be added later if a marketing page is ever specified.
-- **Service-role key usage** — anon key + (future) RLS is the access model. No service-role client in this slice.
-- **Email/password or magic-link auth** — OAuth only, per FR-001 and Access Control ("No password management").
+- GitHub OAuth — scoped out for now; the plan notes where to add a second provider button with no architectural changes.
+- Styled auth UI — F-01 delivers functional, unstyled MVP auth. Real polish belongs in a later UI slice.
+- Avatar / profile display — email address only; no avatar fetch from the OAuth provider.
+- Rate limiting or brute-force protection on the callback route.
+- Supabase MFA or password-based auth.
+- A test runner — none is configured; manual verification covers this slice.
 
 ## Implementation Approach
 
-Three phases. Phase 0 is manual dashboard configuration (no code) captured as a reproducible checklist. Phase 1 lays the Workers-safe Supabase plumbing and the proxy gate, leaving `/login` as a stub — at the end of Phase 1 the app correctly redirects but cannot yet sign anyone in. Phase 2 implements the actual Google OAuth flow and the verification UI.
-
-The three-client split is the canonical `@supabase/ssr` App Router pattern: a **browser** factory (for the client-side sign-in button), a **server** factory (for Server Components and Route Handlers, bound to `next/headers` cookies), and a **proxy** factory (bound to the `NextRequest`/`NextResponse` cookie pair). Keeping them in separate files prevents `next/headers` (server-only) from leaking into the browser bundle.
+Install `@supabase/ssr`. Replace the single browser-only Supabase client with two factory functions (server and browser). Add middleware that runs `updateSession` on every request and redirects unauthenticated visitors away from protected routes. Add a `/sign-in` page backed by a Server Action that initiates the PKCE OAuth flow; add a `/auth/callback` route handler that completes the exchange. Update the home page Server Component to read the session and render conditionally.
 
 ## Critical Implementation Details
 
-- **Proxy cookie write-back is load-bearing.** The proxy's server client must be constructed with a `setAll` that writes cookies onto **both** the request (so downstream sees them) and the `NextResponse` it returns. If the proxy returns a *new* response object without copying these cookies, the refreshed session is silently dropped — this is the exact "cookies don't survive the round-trip" failure the infrastructure doc warns about. The returned response from the proxy must be the same object whose cookies were set.
-- **`getUser()` not `getSession()` in the proxy and on `/`.** `getSession()` reads the cookie without validating it against the Auth server; `getUser()` validates and triggers refresh. Use `getUser()` for any security decision.
-- **OAuth `redirectTo` must be an absolute URL on the current origin.** Compute it from the request origin (e.g. `${origin}/auth/callback`) rather than hardcoding, so the same code works in `wrangler dev` (localhost) and on the deployed Worker. The origin must also be registered in Supabase Auth's redirect allowlist (Phase 0).
-- **The callback exchanges `code` then redirects.** `/auth/callback` reads `code` from the query string, calls `exchangeCodeForSession(code)` on a server client, and on success redirects to the `next` param (default `/`); on failure redirects to `/login?error=oauth_failed`.
+**Async `cookies()` in Next.js 16**: `cookies()` from `next/headers` returns a `Promise`; calling it synchronously (the Next.js 13-era pattern) compiles but produces stale values. The server client factory must `await cookies()` before constructing the Supabase client.
 
-## Phase 0: External Setup (manual, no code)
+**Middleware cookie mutation must target both the request and the response**: `@supabase/ssr`'s `setAll` in the middleware cookie handler needs to write to both `request.cookies` and the `NextResponse` cookies. Writing to only one breaks session persistence across redirects — the session cookie would be lost on the next request.
 
-### Overview
-
-Configure Google OAuth and Supabase Auth so the code in later phases has something to talk to. This is dashboard work; capture it here so it is reproducible.
-
-### Changes Required:
-
-#### 1. Google Cloud OAuth client
-
-**Where**: Google Cloud Console → APIs & Services → Credentials.
-
-**Intent**: Create an OAuth 2.0 Client ID (type: Web application) for NutriCalc. Record the client ID and client secret.
-
-**Contract**: Authorized redirect URI must be the Supabase callback: `https://<project-ref>.supabase.co/auth/v1/callback`. (Supabase brokers the Google handshake; the app never receives Google's redirect directly.)
-
-#### 2. Supabase Auth — enable Google provider
-
-**Where**: Supabase Dashboard → Authentication → Providers → Google.
-
-**Intent**: Enable Google and paste the Google client ID + secret from step 1.
-
-**Contract**: Under Authentication → URL Configuration, add allowed redirect URLs: `http://localhost:8787/auth/callback` (wrangler dev default port — adjust if different), `http://localhost:3000/auth/callback` (next dev), and `https://<worker-domain>/auth/callback` (deployed). Set Site URL to the deployed worker URL.
-
-#### 3. Cloudflare dashboard env vars
-
-**Where**: Cloudflare Dashboard → Workers → nutri-calc → Settings → Variables.
-
-**Intent**: Ensure the public Supabase vars are present so `process.env` surfaces them at runtime (required because `wrangler deploy` does not validate env vars — per `infrastructure.md:85`).
-
-**Contract**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as plain-text vars. Mirror them in `.env.local` for local dev (already present).
-
-### Success Criteria:
-
-#### Automated Verification:
-
-- (none — this phase is manual dashboard configuration)
-
-#### Manual Verification:
-
-- Google OAuth client exists with the Supabase callback URL as an authorized redirect URI
-- Supabase Google provider is enabled with the client ID/secret populated
-- Supabase redirect allowlist includes localhost (dev) and the deployed worker `/auth/callback`
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in both Cloudflare dashboard and `.env.local`
-
-**Implementation Note**: This phase gates Phase 2 verification (you can't complete an OAuth round-trip without it) but does not block Phase 1 code. After confirming the dashboard state, proceed to Phase 1.
+**PKCE callback is a `GET` route handler, not a Server Action**: `exchangeCodeForSession(code)` must run in a Route Handler (`/auth/callback/route.ts`), not a Server Action, because Supabase redirects the browser back to this URL with a `?code=` query param. Server Actions don't receive `GET` requests.
 
 ---
 
-## Phase 1: Workers-Safe Supabase Plumbing
+## Phase 1: SSR Client Utilities
 
 ### Overview
 
-Install `@supabase/ssr`, replace the insecure singleton with three cookie-aware client factories, add the `proxy.ts` auth gate, and remove the demo route. At the end, the app redirects unauthenticated traffic to a stub `/login` and builds cleanly — but no sign-in happens yet.
+Install `@supabase/ssr`, delete the browser-only client, and create two SSR-aware factory functions. Update the only existing consumer (`/api/messages`) to use the server factory. No UI changes — this phase is pure plumbing, verified by a passing build and type-check.
 
-### Changes Required:
+### Changes Required
 
 #### 1. Install `@supabase/ssr`
 
-**File**: `package.json`
+**File**: `package.json` (via `npm install`)
 
-**Intent**: Add the Workers-compatible SSR helper alongside the existing `@supabase/supabase-js`.
+**Intent**: Add the only Supabase package whose cookie handler works in the Cloudflare Workers edge runtime. The existing `@supabase/supabase-js` remains as a peer dependency (it is a required peer of `@supabase/ssr`).
 
-**Contract**: `@supabase/ssr` pinned (`^0.10.3`) in `dependencies`. Run `npm install @supabase/ssr@latest`.
-
-#### 2. Browser client factory
-
-**File**: `src/lib/supabase/browser.ts`
-
-**Intent**: Factory returning a `createBrowserClient` instance for use in Client Components (the sign-in button). Reads the public env vars.
-
-**Contract**: Exports `createClient()` returning `ReturnType<typeof createBrowserClient>`. Uses `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`. No `next/headers` import (must stay browser-safe).
-
-#### 3. Server client factory
-
-**File**: `src/lib/supabase/server.ts`
-
-**Intent**: Factory returning a `createServerClient` bound to `next/headers` cookies, for Server Components, Server Actions, and Route Handlers.
-
-**Contract**: Exports `async createClient()`. Cookie adapter implements `getAll()` (from `(await cookies()).getAll()`) and `setAll(cookiesToSet)` (writes each via the cookie store, wrapped in try/catch because Server Components cannot set cookies — the documented `@supabase/ssr` pattern). File begins with `import 'server-only'`.
-
-#### 4. Proxy client factory + proxy entrypoint
-
-**File**: `src/lib/supabase/proxy.ts` and `src/proxy.ts`
-
-**Intent**: `proxy.ts` is the Next.js 16 proxy entrypoint (formerly middleware). It builds a server client bound to the incoming request/outgoing response, calls `getUser()` to validate+refresh the session, then redirects unauthenticated requests to `/login`. `src/lib/supabase/proxy.ts` holds the reusable client-construction + session-refresh helper so `proxy.ts` stays thin.
-
-**Contract**:
-- `src/lib/supabase/proxy.ts` exports a helper (e.g. `updateSession(request: NextRequest)`) that returns `{ response, user }`. Its `setAll` writes cookies onto both `request.cookies` and the `NextResponse`, and **returns that same response object** (see Critical Implementation Details — dropping this breaks the cookie round-trip).
-- `src/proxy.ts` exports default `proxy(request)` and `config.matcher`. Logic: run `updateSession`; if `!user` and the path is not `/login` and does not start with `/auth`, redirect to `/login`. Matcher excludes static assets: `['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)']`.
-
-```ts
-// src/proxy.ts — gate logic (the one non-obvious ordering)
-const { response, user } = await updateSession(request)
-const { pathname } = request.nextUrl
-const isPublic = pathname === '/login' || pathname.startsWith('/auth')
-if (!user && !isPublic) {
-  return NextResponse.redirect(new URL('/login', request.url))
-}
-return response // must be the response whose cookies updateSession set
-```
-
-#### 5. Stub `/login` page
-
-**File**: `src/app/login/page.tsx`
-
-**Intent**: Minimal placeholder so the proxy redirect has a target. Real UI lands in Phase 2.
-
-**Contract**: Server Component rendering a heading. No auth logic yet.
-
-#### 6. Remove demo route and old singleton
-
-**File**: delete `src/app/api/messages/route.ts`; delete `src/lib/supabase.ts`
-
-**Intent**: Drop the only consumer of the deprecated shared client and the singleton itself. The `messages` table is dropped manually in Supabase Studio.
-
-**Contract**: No remaining imports of `@/lib/supabase` (the old path). Grep confirms zero references.
-
-### Success Criteria:
-
-#### Automated Verification:
-
-- `@supabase/ssr` present in `package.json` dependencies
-- No references to the old `@/lib/supabase` singleton remain: `grep -r "lib/supabase'" src` returns nothing (only `lib/supabase/...` subpaths)
-- Type check passes: `npx tsc --noEmit`
-- Lint passes: `npm run lint`
-- Worker build succeeds: `npm run build:worker`
-
-#### Manual Verification:
-
-- Via `npm run preview` (opennextjs build + `wrangler dev` on the built Worker — the Workers runtime, NOT `next dev`): visiting `/` while signed out redirects to `/login`. This validates the OpenNext-bundled proxy, the riskiest integration; `next dev` runs `proxy.ts` natively and would not exercise it.
-- `/login` renders the stub heading without errors
-- `/auth/anything` is not redirected (reachable, even if it 404s for now)
-- The `messages` table has been dropped in Supabase Studio
-
-**Implementation Note**: After automated verification passes, pause for manual confirmation that the redirect behaves before proceeding to Phase 2.
+**Contract**: Run `npm install @supabase/ssr`. After install, `package.json` lists `"@supabase/ssr": "^0.x"` under `dependencies`.
 
 ---
 
-## Phase 2: Google OAuth Flow + Verification UI
+#### 2. Delete `src/lib/supabase.ts`
+
+**File**: `src/lib/supabase.ts` — delete
+
+**Intent**: Remove the browser-only client to prevent any future accidental server-side use. All Supabase access will go through the new factory functions below.
+
+**Contract**: File is absent from the repository after this change.
+
+---
+
+#### 3. Create `src/lib/supabase/server.ts`
+
+**File**: `src/lib/supabase/server.ts` — new file
+
+**Intent**: Export an async `createClient()` factory that returns a Supabase server client with read/write cookie access. Used in Server Components, Route Handlers, and Server Actions.
+
+**Contract**: `export async function createClient()` — awaits `cookies()` from `next/headers`, constructs a `createServerClient` from `@supabase/ssr` with a `getAll` / `setAll` cookie adapter, and returns the client. The `setAll` catch block silently swallows errors (expected — setting cookies from a Server Component without middleware is a no-op, not an error).
+
+---
+
+#### 4. Create `src/lib/supabase/client.ts`
+
+**File**: `src/lib/supabase/client.ts` — new file
+
+**Intent**: Export a `createClient()` factory for use in Client Components (`'use client'`). Returns a browser-side Supabase client using `createBrowserClient` from `@supabase/ssr`.
+
+**Contract**: `export function createClient()` — synchronous; calls `createBrowserClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)` and returns the result.
+
+---
+
+#### 5. Update `src/app/api/messages/route.ts`
+
+**File**: `src/app/api/messages/route.ts`
+
+**Intent**: Swap the deleted browser client import for the new server factory. The route handler's logic is unchanged — only the import and client construction differ.
+
+**Contract**: Replace `import { supabase } from '@/lib/supabase'` with `import { createClient } from '@/lib/supabase/server'`; replace the module-level `supabase` constant with `const supabase = await createClient()` at the top of each handler function.
+
+---
+
+### Success Criteria
+
+#### Automated Verification
+
+- Build passes: `npm run build`
+- TypeScript compiles with no errors: `npx tsc --noEmit`
+- Linting passes: `npm run lint`
+- `src/lib/supabase.ts` is absent: `test ! -f src/lib/supabase.ts`
+- Both new files exist: `test -f src/lib/supabase/server.ts && test -f src/lib/supabase/client.ts`
+
+#### Manual Verification
+
+- None required for this phase — no UI surface yet.
+
+**Implementation Note**: After all automated checks pass, proceed directly to Phase 2. No manual gate here.
+
+---
+
+## Phase 2: Middleware — Session Refresh + Route Guard
 
 ### Overview
 
-Implement the real sign-in: a Google button on `/login`, the `/auth/callback` PKCE exchange, the `/auth/signout` handler, and a protected home page that proves the session works by showing the user's email.
+Create `src/middleware.ts` that runs on every non-static request. It performs two jobs: (1) refreshes the Supabase session cookie so it doesn't expire mid-session, and (2) redirects unauthenticated visitors away from protected routes. Public routes: `/`, `/sign-in`, and anything under `/auth/`.
 
-### Changes Required:
+### Changes Required
 
-#### 1. Sign-in button (Client Component)
+#### 1. Create `src/middleware.ts`
 
-**File**: `src/app/login/SignInWithGoogle.tsx`
+**File**: `src/middleware.ts` — new file
 
-**Intent**: Client Component that, on click, creates a browser client and calls `signInWithOAuth` for Google, redirecting to the returned provider URL.
+**Intent**: On every matched request, refresh the Supabase session using `@supabase/ssr`'s `createServerClient` with a request/response cookie adapter. After refresh, if the user is unauthenticated and the requested path is not in the public allow-list (`/`, `/sign-in`, `/auth/**`), redirect to `/sign-in`. Return the (potentially cookie-mutated) response for all other cases.
 
-**Contract**: `'use client'`. Calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: \`${location.origin}/auth/callback\` } })`. Renders a button labeled "Continue with Google". Must use the `createClient` from `src/lib/supabase/browser.ts` (`@supabase/ssr`'s cookie-based `createBrowserClient`) — NOT `@supabase/supabase-js` (localStorage default). The PKCE code verifier must be stored in a cookie so the `/auth/callback` server handler can read it; a localStorage-backed client would break `exchangeCodeForSession`.
+**Contract**: Export `async function middleware(request: NextRequest): Promise<NextResponse>`. The cookie adapter writes to both `request.cookies` and a `NextResponse` created from the request (see Critical Implementation Details — both sides must be written). After constructing the client, call `supabase.auth.getUser()` — use `getUser()` not `getSession()` (getSession reads from the cookie cache without server-side verification; getUser hits the Supabase auth server and is the safe call for authorization decisions).
 
-#### 2. Login page with error banner
+Export a `config` object with a `matcher` that excludes `_next/static`, `_next/image`, `favicon.ico`, and static file extensions so the middleware doesn't run on assets.
 
-**File**: `src/app/login/page.tsx` (replace the Phase 1 stub)
+Public path check: `pathname === '/'`, `pathname === '/sign-in'`, or `pathname.startsWith('/auth/')`.
 
-**Intent**: Server Component that renders the sign-in button and, when `searchParams.error` is present, a plain-text error banner.
+---
 
-**Contract**: Reads `searchParams` (Next 16: `searchParams` is a Promise — `await` it). Maps known error codes (`oauth_failed`, `missing_code`) to human-readable messages; falls back to a generic message. Renders `<SignInWithGoogle />`.
+### Success Criteria
 
-#### 3. OAuth callback route handler
+#### Automated Verification
 
-**File**: `src/app/auth/callback/route.ts`
+- Build passes: `npm run build`
+- TypeScript compiles with no errors: `npx tsc --noEmit`
+- Linting passes: `npm run lint`
 
-**Intent**: Exchange the OAuth `code` for a session, then redirect into the app.
+#### Manual Verification
 
-**Contract**: `GET` handler. Reads `code` and `next` (default `/`) from the request URL. If `code` missing → redirect `/login?error=missing_code`. Build the server client, call `exchangeCodeForSession(code)`; on error → redirect `/login?error=oauth_failed`; on success → redirect to `next`. Redirects use the request origin.
+- Visit `http://localhost:3000/any-non-existent-route` while signed out → browser redirects to `/sign-in`.
+- Visit `http://localhost:3000/` while signed out → page loads (no redirect).
+- Visit `http://localhost:3000/sign-in` while signed out → page loads (no redirect; the page may show a 404 since it doesn't exist yet — that's fine for this phase; what matters is no redirect loop).
 
-#### 4. Sign-out route handler
+**Implementation Note**: After automated checks pass, run `npm run dev` and verify the manual routing behaviour above before proceeding to Phase 3.
 
-**File**: `src/app/auth/signout/route.ts`
+---
 
-**Intent**: Clear the session and return to `/login`.
+## Phase 3: Auth Flow — Sign-in Page, Callback, Home Page, Sign-out
 
-**Contract**: `POST` handler. Builds the server client, calls `auth.signOut()`, redirects to `/login`. (Route Handler per user's choice, not a Server Action.) The cookies cleared by `signOut()` must be written onto the redirect response — use the same server-client cookie store rather than constructing a bare `NextResponse.redirect` that drops them, or the UI returns to `/login` while the session cookie survives ("sign-out that doesn't sign out").
+### Overview
 
-#### 5. Protected home page
+Wire the full OAuth round-trip: a `/sign-in` page with a Google OAuth button (using a Server Action), an `/auth/callback` route handler that completes the PKCE exchange and issues the session cookie, a shared `auth.ts` Server Actions file for sign-in and sign-out, and an updated home page that reads the session and renders conditionally.
 
-**File**: `src/app/page.tsx` (replace placeholder)
+### Changes Required
 
-**Intent**: Prove the session round-trips: read the user server-side, render their email and a sign-out button.
+#### 1. Create `src/app/actions/auth.ts`
 
-**Contract**: `async` Server Component. Builds the server client, calls `auth.getUser()`. (The proxy already guarantees a user reaches here, but call `getUser()` for the authoritative check and to display the email.) Renders the email and a `<form action="/auth/signout" method="post"><button>Sign out</button></form>`.
+**File**: `src/app/actions/auth.ts` — new file
 
-### Success Criteria:
+**Intent**: House the two auth Server Actions shared across pages: `signIn` (initiates Google OAuth) and `signOut` (clears the session and redirects to `/sign-in`). Co-locating them prevents duplication between the sign-in page and the home page.
 
-#### Automated Verification:
+**Contract**: Mark file with `'use server'`. Export `async function signIn()` — creates the server client, calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: \`\${origin}/auth/callback\` } })` (origin comes from `headers().get('origin')`), redirects to `data.url` on success, or to `/sign-in?error=oauth_failed` on error. Export `async function signOut()` — creates the server client, calls `supabase.auth.signOut()`, then `redirect('/sign-in')`.
 
-- Type check passes: `npx tsc --noEmit`
-- Lint passes: `npm run lint`
-- Worker build succeeds: `npm run build:worker`
+---
 
-#### Manual Verification:
+#### 2. Create `src/app/sign-in/page.tsx`
 
-- In `wrangler dev`: visiting `/` redirects to `/login`; "Continue with Google" completes Google OAuth and returns to `/` showing the signed-in email
-- "Sign out" clears the session and returns to `/login`; re-visiting `/` redirects to `/login` again
-- Forcing an error (e.g. cancel the Google consent) lands on `/login` with a visible error banner
-- The full flow works once on a **deployed** Worker (not just local) — confirms cookies survive the real runtime
-- `wrangler tail` shows no exceptions during the flow
+**File**: `src/app/sign-in/page.tsx` — new file
 
-**Implementation Note**: The deployed-Worker check is the real acceptance gate — the local dev server does not fully reproduce the Workers cookie behavior. After automated verification passes, pause for manual confirmation of the deployed round-trip.
+**Intent**: The public sign-in page. Shows a "Sign in with Google" button wired to the `signIn` Server Action. If the `?error=` query param is present, displays a brief human-readable error message above the button.
+
+**Contract**: Server Component. Reads `searchParams.error` — map known values (`oauth_failed`, `callback_failed`) to friendly strings; unknown values show a generic "Sign-in failed, please try again." message. Renders a `<form action={signIn}>` containing a `<button type="submit">Sign in with Google</button>`. No GitHub button for now (add a second `<form action={signInGithub}>` here when GitHub is wired — no structural changes needed).
+
+---
+
+#### 3. Create `src/app/auth/callback/route.ts`
+
+**File**: `src/app/auth/callback/route.ts` — new file
+
+**Intent**: Complete the PKCE code exchange. Supabase redirects the browser here after Google authentication with a `?code=` query parameter. This handler exchanges the code for a session cookie and redirects the user home.
+
+**Contract**: Export `async function GET(request: Request)`. Extract `code` from `new URL(request.url).searchParams`. If `code` is present, call `supabase.auth.exchangeCodeForSession(code)`. On success, redirect to `/` (or the `?next=` param if present for future use). On error or absent code, redirect to `/sign-in?error=callback_failed`.
+
+---
+
+#### 4. Update `src/app/page.tsx`
+
+**File**: `src/app/page.tsx`
+
+**Intent**: Make the home page auth-aware. A signed-in user sees their email address and a "Sign out" button. A signed-out user sees a "Sign in with Google" link pointing to `/sign-in`.
+
+**Contract**: Async Server Component. Call `await createClient()` then `supabase.auth.getUser()`. If `user` is present, render the email and a `<form action={signOut}>` with a Sign-out button. If no user, render a brief landing prompt and a `<a href="/sign-in">` link. Keep Tailwind classes consistent with the existing `bg-zinc-50` / `dark:bg-zinc-900` palette already in the file.
+
+---
+
+### Success Criteria
+
+#### Automated Verification
+
+- Build passes: `npm run build`
+- TypeScript compiles with no errors: `npx tsc --noEmit`
+- Linting passes: `npm run lint`
+- All four new/modified files exist:
+  - `src/app/actions/auth.ts`
+  - `src/app/sign-in/page.tsx`
+  - `src/app/auth/callback/route.ts`
+  - `src/app/page.tsx` (modified)
+
+#### Manual Verification
+
+- **Sign-in flow**: Visit `http://localhost:3000/` signed out → see landing with "Sign in with Google" link → navigate to `/sign-in` → click the button → complete Google OAuth → land back on `/` → see your email address and a "Sign out" button.
+- **Sign-out**: Click "Sign out" → redirected to `/sign-in` → visiting `/` shows the landing (not the email).
+- **Session persistence**: After sign-in, refresh the page → still signed in (session cookie survived the reload).
+- **Route guard**: While signed in, visit `http://localhost:3000/protected-does-not-exist` → redirected to `/sign-in` (expected; the route 404s after redirect is correct behaviour for this phase).
+- **OAuth error**: Simulate an error by visiting `/sign-in?error=oauth_failed` → a brief error message is visible above the sign-in button.
+
+**Implementation Note**: This phase requires a live Supabase project with Google OAuth configured (OAuth app in Google Cloud Console + Supabase Dashboard → Auth → Providers → Google). The callback URL registered with Google must be `{your-supabase-project-url}/auth/v1/callback` (Supabase's internal callback — not `/auth/callback` in the Next.js app). The Next.js `/auth/callback` route is the redirect URI set in `supabase.auth.signInWithOAuth`'s `redirectTo` option, which Supabase's auth service in turn redirects to after it processes the provider's response.
+
+Pause here for manual confirmation that the full OAuth loop works end-to-end before marking this change as complete.
 
 ---
 
 ## Testing Strategy
 
-No automated test runner in this slice (see "What We're NOT Doing"). Verification is manual.
+### No test runner is configured
 
-### Manual Testing Steps:
+Per `CLAUDE.md`: no test runner is configured yet. Manual verification covers F-01.
 
-1. **Signed-out redirect**: open `/` in a fresh/incognito session → expect redirect to `/login`.
-2. **Sign-in happy path**: click "Continue with Google", complete consent → expect return to `/` showing your Google email.
-3. **Session persistence**: refresh `/` → expect to stay on `/` (no redirect), email still shown.
-4. **Sign-out**: click "Sign out" → expect `/login`; then open `/` → expect redirect to `/login`.
-5. **Error path**: start sign-in, cancel at Google consent → expect `/login` with an error banner.
-6. **Deployed runtime**: repeat steps 1–4 against the deployed Worker URL.
+### Manual Testing Steps
 
-## Performance Considerations
-
-The proxy runs `getUser()` on every matched request, which makes an Auth-server validation call. This is the standard Supabase SSR cost and is acceptable at MVP scale (PRD `target_scale.qps: low`). Watch the Workers CPU budget (`infrastructure.md` flags 30 ms paid-tier CPU limit) but a single `getUser()` is well within it — the heavy path is the future AI-parse flow, not auth.
+1. Sign-out → visit `http://localhost:3000/` → confirm landing prompt is shown, not a redirect.
+2. Click through to `/sign-in` → click Google button → complete OAuth → confirm landing on `/` with email visible.
+3. Refresh the page → confirm session survives (email still visible).
+4. Click "Sign out" → confirm redirect to `/sign-in` → confirm `/` shows landing (not email).
+5. While signed out, navigate to `http://localhost:3000/sign-in?error=oauth_failed` → confirm error message is visible.
+6. While signed out, navigate to `http://localhost:3000/recipes` (non-existent) → confirm redirect to `/sign-in`.
+7. Repeat steps 1–4 in a fresh private/incognito window to rule out local browser state.
 
 ## Migration Notes
 
-- The `messages` table must be dropped manually in Supabase Studio (Phase 1 cleanup). No application data depends on it.
-- No schema migrations in this slice; Supabase Auth manages `auth.users` itself.
+The deletion of `src/lib/supabase.ts` is the only breaking change. The only consumer (`src/app/api/messages/route.ts`) is updated in Phase 1 before the file is deleted. No database migrations are required for F-01 — auth is handled entirely by Supabase's managed auth service.
+
+**Supabase Dashboard setup** (one-time, before Phase 3 manual testing):
+1. Auth → Providers → Google → enable, paste Client ID + Client Secret from Google Cloud Console.
+2. Auth → URL Configuration → add `http://localhost:3000/auth/callback` to the Redirect URLs allow-list (and the production URL when deploying).
+
+## Performance Considerations
+
+The middleware runs on every non-static request. `supabase.auth.getUser()` makes a network call to the Supabase auth server to validate the session JWT. In the Cloudflare Workers runtime, this call is ~50–100 ms on a warm worker. Acceptable for F-01; if middleware latency becomes a concern in later slices, switch to `getSession()` for public routes where server-side JWT verification is not required (noting that `getSession()` trusts the cookie cache without re-validating with the auth server).
 
 ## References
 
-- Change identity: `context/changes/auth-supabase-oauth/change.md`
-- Roadmap item F-01: `context/foundation/roadmap.md:70`
-- Infrastructure risk register (Supabase SSR / Workers): `context/foundation/infrastructure.md:83,112`
-- Next.js 16 Proxy doc: `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`
-- Next.js 16 Authentication guide: `node_modules/next/dist/docs/01-app/02-guides/authentication.md`
-- Current singleton being replaced: `src/lib/supabase.ts:3`
+- Roadmap: `context/foundation/roadmap.md` (F-01, lines 70–82)
+- PRD: `context/foundation/prd.md` (FR-001, Access Control)
+- `@supabase/ssr` Next.js guide: https://supabase.com/docs/guides/auth/server-side/nextjs
+- Existing Supabase client (to be deleted): `src/lib/supabase.ts`
+- Messages API (will be updated): `src/app/api/messages/route.ts:3`
+
+---
 
 ## Progress
 
-> Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
+> Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
-### Phase 0: External Setup
-
-#### Manual
-
-- [ ] 0.1 Google OAuth client created with Supabase callback URL as authorized redirect URI
-- [ ] 0.2 Supabase Google provider enabled with client ID/secret
-- [ ] 0.3 Supabase redirect allowlist includes localhost (dev) and deployed worker `/auth/callback`
-- [ ] 0.4 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in Cloudflare dashboard and `.env.local`
-
-### Phase 1: Workers-Safe Supabase Plumbing
+### Phase 1: SSR Client Utilities
 
 #### Automated
 
-- [ ] 1.1 `@supabase/ssr` present in `package.json` dependencies
-- [ ] 1.2 No references to the old `@/lib/supabase` singleton remain
-- [ ] 1.3 Type check passes: `npx tsc --noEmit`
-- [ ] 1.4 Lint passes: `npm run lint`
-- [ ] 1.5 Worker build succeeds: `npm run build:worker`
+- [x] 1.1 Build passes: `npm run build`
+- [x] 1.2 TypeScript compiles: `npx tsc --noEmit`
+- [x] 1.3 Linting passes: `npm run lint`
+- [x] 1.4 `src/lib/supabase.ts` is absent
+- [x] 1.5 `src/lib/supabase/server.ts` and `src/lib/supabase/client.ts` exist
 
-#### Manual
-
-- [ ] 1.6 Via `npm run preview` (Workers runtime), visiting `/` while signed out redirects to `/login`
-- [ ] 1.7 `/login` renders the stub heading without errors
-- [ ] 1.8 `/auth/*` is reachable (not redirected)
-- [ ] 1.9 The `messages` table dropped in Supabase Studio
-
-### Phase 2: Google OAuth Flow + Verification UI
+### Phase 2: Middleware — Session Refresh + Route Guard
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx tsc --noEmit`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Worker build succeeds: `npm run build:worker`
+- [ ] 2.1 Build passes: `npm run build`
+- [ ] 2.2 TypeScript compiles: `npx tsc --noEmit`
+- [ ] 2.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Sign-in with Google returns to `/` showing the signed-in email
-- [ ] 2.5 Sign-out clears the session and returns to `/login`; re-visiting `/` redirects
-- [ ] 2.6 Cancelling consent lands on `/login` with a visible error banner
-- [ ] 2.7 Full flow works on a deployed Worker
-- [ ] 2.8 `wrangler tail` shows no exceptions during the flow
+- [ ] 2.4 Unauthenticated visit to a non-public route redirects to `/sign-in`
+- [ ] 2.5 Unauthenticated visit to `/` loads without redirect
+- [ ] 2.6 Unauthenticated visit to `/sign-in` loads without redirect loop
+
+### Phase 3: Auth Flow — Sign-in Page, Callback, Home Page, Sign-out
+
+#### Automated
+
+- [ ] 3.1 Build passes: `npm run build`
+- [ ] 3.2 TypeScript compiles: `npx tsc --noEmit`
+- [ ] 3.3 Linting passes: `npm run lint`
+- [ ] 3.4 All four new/modified auth files exist
+
+#### Manual
+
+- [ ] 3.5 Full Google OAuth sign-in flow completes; email visible on home page
+- [ ] 3.6 Sign-out clears session; home page shows landing
+- [ ] 3.7 Session survives page refresh
+- [ ] 3.8 Route guard redirects unauthenticated user to `/sign-in`
+- [ ] 3.9 `/sign-in?error=oauth_failed` displays an error message
