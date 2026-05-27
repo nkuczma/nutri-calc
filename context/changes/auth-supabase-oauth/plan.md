@@ -314,15 +314,15 @@ The middleware runs on every non-static request. `supabase.auth.getUser()` makes
 
 #### Automated
 
-- [x] 3.1 Build passes: `npm run build`
-- [x] 3.2 TypeScript compiles: `npx tsc --noEmit`
-- [x] 3.3 Linting passes: `npm run lint`
-- [x] 3.4 All four new/modified auth files exist
+- [x] 3.1 Build passes: `npm run build` — e818c3a
+- [x] 3.2 TypeScript compiles: `npx tsc --noEmit` — e818c3a
+- [x] 3.3 Linting passes: `npm run lint` — e818c3a
+- [x] 3.4 All four new/modified auth files exist — e818c3a
 
 #### Manual
 
-- [x] 3.5 Full Google OAuth sign-in flow completes; email visible on home page
-- [x] 3.6 Sign-out clears session; home page shows landing
-- [x] 3.7 Session survives page refresh
-- [x] 3.8 Route guard redirects unauthenticated user to `/sign-in`
-- [x] 3.9 `/sign-in?error=oauth_failed` displays an error message
+- [x] 3.5 Full Google OAuth sign-in flow completes; email visible on home page — e818c3a
+- [x] 3.6 Sign-out clears session; home page shows landing — e818c3a
+- [x] 3.7 Session survives page refresh — e818c3a
+- [x] 3.8 Route guard redirects unauthenticated user to `/sign-in` — e818c3a
+- [x] 3.9 `/sign-in?error=oauth_failed` displays an error message — e818c3a
