@@ -53,7 +53,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   if (!user && !isPublicPath) {
     const signInUrl = request.nextUrl.clone()
     signInUrl.pathname = '/sign-in'
-    return NextResponse.redirect(signInUrl)
+    const redirectResponse = NextResponse.redirect(signInUrl)
+    // Carry over any session cookies @supabase/ssr refreshed during getUser()
+    // so a mid-request token refresh isn't lost on the redirect.
+    supabaseResponse.cookies.getAll().forEach((cookie) =>
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    )
+    return redirectResponse
   }
 
   return supabaseResponse

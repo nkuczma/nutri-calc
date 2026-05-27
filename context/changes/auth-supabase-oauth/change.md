@@ -2,7 +2,7 @@
 change_id: auth-supabase-oauth
 roadmap_id: F-01
 title: Wire Supabase OAuth (Google) for Workers runtime
-status: implemented
+status: impl_reviewed
 created: 2026-05-27
 updated: 2026-05-27
 ---

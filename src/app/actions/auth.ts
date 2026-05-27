@@ -25,6 +25,9 @@ export async function signIn() {
 
 export async function signOut() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    redirect('/sign-in?error=signout_failed')
+  }
   redirect('/sign-in')
 }
