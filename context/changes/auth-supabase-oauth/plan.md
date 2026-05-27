@@ -290,25 +290,25 @@ The middleware runs on every non-static request. `supabase.auth.getUser()` makes
 
 #### Automated
 
-- [x] 1.1 Build passes: `npm run build`
-- [x] 1.2 TypeScript compiles: `npx tsc --noEmit`
-- [x] 1.3 Linting passes: `npm run lint`
-- [x] 1.4 `src/lib/supabase.ts` is absent
-- [x] 1.5 `src/lib/supabase/server.ts` and `src/lib/supabase/client.ts` exist
+- [x] 1.1 Build passes: `npm run build` — 1dec878
+- [x] 1.2 TypeScript compiles: `npx tsc --noEmit` — 1dec878
+- [x] 1.3 Linting passes: `npm run lint` — 1dec878
+- [x] 1.4 `src/lib/supabase.ts` is absent — 1dec878
+- [x] 1.5 `src/lib/supabase/server.ts` and `src/lib/supabase/client.ts` exist — 1dec878
 
 ### Phase 2: Middleware — Session Refresh + Route Guard
 
 #### Automated
 
-- [ ] 2.1 Build passes: `npm run build`
-- [ ] 2.2 TypeScript compiles: `npx tsc --noEmit`
-- [ ] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Build passes: `npm run build`
+- [x] 2.2 TypeScript compiles: `npx tsc --noEmit`
+- [x] 2.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Unauthenticated visit to a non-public route redirects to `/sign-in`
-- [ ] 2.5 Unauthenticated visit to `/` loads without redirect
-- [ ] 2.6 Unauthenticated visit to `/sign-in` loads without redirect loop
+- [x] 2.4 Unauthenticated visit to a non-public route redirects to `/sign-in`
+- [x] 2.5 Unauthenticated visit to `/` loads without redirect
+- [x] 2.6 Unauthenticated visit to `/sign-in` loads without redirect loop
 
 ### Phase 3: Auth Flow — Sign-in Page, Callback, Home Page, Sign-out
 
