@@ -31,9 +31,9 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 
 | ID    | Change ID                | Outcome (user can …)                                                                                | Prerequisites    | PRD refs                          | Status   |
 | ----- | ------------------------ | --------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
-| F-01  | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                 | —                | FR-001, NFR data isolation, Access Control | ready    |
-| F-02  | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced          | —                | FR-005, FR-006, Open Q #1, NFR reproducibility | blocked  |
-| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | proposed |
+| F-01  | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                 | —                | FR-001, NFR data isolation, Access Control | done     |
+| F-02  | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced          | —                | FR-005, FR-006, Open Q #1, NFR reproducibility | done     |
+| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | ready    |
 | S-01  | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags | F-01, F-02 | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | proposed |
 | S-02  | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary       | F-01, F-02       | FR-004, FR-005, FR-006            | proposed |
 | S-03  | save-recipe              | save a parsed or manually-created recipe to their account                                           | S-01, F-03       | FR-007, NFR data isolation        | proposed |
@@ -63,7 +63,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Deploy / infra:** present — `wrangler.jsonc` + `@opennextjs/cloudflare` v1.19.11 + `build:worker` / `deploy` scripts + `.github/workflows/deploy.yml` auto-deploy on push to main.
 - **Observability:** absent — no logger, no Sentry/Datadog/OTel, no structured logs.
 - **AI parsing:** absent — no LLM SDK, no prompt, no parse Server Action.
-- **Nutrition API:** absent — no client, no provider chosen (PRD Open Q #1).
+- **Nutrition API:** present — `src/lib/nutrition.ts`, USDA FoodData Central (`fetchNutrients`, `number | "missing"` contract).
 
 ## Foundations
 
@@ -78,7 +78,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Critical-path foundation for the north star. Per `infrastructure.md` risk register, Supabase Auth in the Workers runtime requires `@supabase/ssr` with an edge-compatible cookie handler; the default `@supabase/auth-helpers-nextjs` will silently fail. Wrong package choice burns days debugging cookie/session round-trips.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: Nutrition data source decision + client
 
@@ -92,7 +92,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Which external nutrition data source will the product use? Candidates: Open Food Facts (free, broadest), USDA FoodData Central (free, US-centric), Edamam (freemium, ingredient-matching). The choice changes micronutrient coverage breadth, missing-data frequency, and the ingredient-matching contract. Owner: user. Block: yes.
 - **Risk:** This foundation gates two slices (S-01 and S-02). Picking late means parsed ingredients have nowhere to send. Picking the wrong source means re-implementing the client mid-MVP — under `main_goal: speed`, that re-work costs more than the missing-coverage trade-off.
-- **Status:** blocked
+- **Status:** done
 
 ### F-03: Recipes schema + RLS
 
@@ -105,7 +105,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** RLS policies enforce the data-isolation NFR under every code path — a weak policy is a security incident in production. Schema must encode the missing-flag invariant at the column level (e.g., nullable nutrient columns + a `missing_nutrients text[]` column, or a JSONB blob with explicit `null` semantics) so neither the ORM nor the application code can silently default to zero.
-- **Status:** proposed
+- **Status:** ready
 
 ## Slices
 
@@ -187,11 +187,11 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 | Roadmap ID | Change ID                | Suggested issue title                                                       | Ready for `/10x-plan` | Notes                                                                                               |
 | ---------- | ------------------------ | --------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                   | yes                   | Run `/10x-plan auth-supabase-oauth`. Use `@supabase/ssr`, not `auth-helpers-nextjs`.                |
-| F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                            | no                    | Blocked on Open Roadmap Question #1.                                                                |
-| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | no                    | Waits on F-01. Can be planned once F-01 is in flight.                                               |
-| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | no                    | Waits on F-01 + F-02. Highest-risk slice; verify CPU-time budget during planning.                   |
-| S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | no                    | Waits on F-01 + F-02. Share summary component with S-01.                                            |
+| F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                   | done                  | Shipped. PR #10 merged.                                                                             |
+| F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                            | done                  | Shipped. USDA FoodData Central, `src/lib/nutrition.ts`.                                             |
+| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | yes                   | F-01 shipped — run `/10x-plan recipes-schema-rls`. Can run in parallel with S-01/S-02 planning.    |
+| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | yes                   | F-01 + F-02 both shipped. Highest-risk slice; verify CPU-time budget during planning.               |
+| S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | yes                   | F-01 + F-02 both shipped. Share summary component with S-01.                                        |
 | S-03       | save-recipe              | Save parsed / manual recipe to account                                      | no                    | Waits on S-01 + F-03. Data-isolation regression test required.                                      |
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                          | no                    | Waits on S-03. No search / filter for MVP.                                                          |
 | S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Blocked on Open Roadmap Question #2 (nutrition re-fetch on edit).                                   |
@@ -199,7 +199,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Open Roadmap Questions
 
-1. **Which external nutrition data source will the product use?** — Candidates: Open Food Facts (free, broadest coverage, community-curated), USDA FoodData Central (free, US-centric, authoritative on whole foods), Edamam (freemium, ingredient-matching by name). The choice changes micronutrient coverage breadth, missing-data frequency, and the ingredient-matching contract. Owner: user. Block: F-02, S-01, S-02 (transitively S-03–S-06 since saved recipes carry nutrition snapshots).
+1. ~~**Which external nutrition data source will the product use?**~~ — Resolved: USDA FoodData Central. Client shipped in `src/lib/nutrition.ts` (F-02 done).
 2. **On editing a saved recipe ingredient, does the nutritional summary re-fetch nutrition data from F-02 or stay frozen at save-time?** — PRD NFR reproducibility ("same ingredient list always produces the same result") suggests re-fetch at view-time; cached snapshot is faster but violates reproducibility when an ingredient line is changed. Owner: user. Block: S-05.
 
 ## Parked
@@ -216,4 +216,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Done
 
-(Empty on first generation. `/10x-archive` appends here when a change whose Change ID matches a roadmap item is archived.)
+| ID   | Change ID           | Outcome                                                              | Merged     |
+| ---- | ------------------- | -------------------------------------------------------------------- | ---------- |
+| F-01 | auth-supabase-oauth | OAuth sign-in (Google/GitHub) + session middleware + route guard shipped | 2026-05-29 |
+| F-02 | nutrition-data-source | USDA FoodData Central client — `fetchNutrients`, `number | "missing"` contract | 2026-05-29 |

@@ -209,27 +209,27 @@ Two sequential USDA HTTP calls per ingredient is acceptable at MVP scale (1,000 
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npx tsc --noEmit`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npx tsc --noEmit` — 4cd6f1d
+- [x] 1.2 Linting passes: `npm run lint` — 4cd6f1d
 
 #### Manual
 
-- [x] 1.3 `src/lib/nutrition.ts` exists with no TypeScript errors
-- [x] 1.4 `.env.local` contains a real `NUTRITION_API_KEY` value
+- [x] 1.3 `src/lib/nutrition.ts` exists with no TypeScript errors — 4cd6f1d
+- [x] 1.4 `.env.local` contains a real `NUTRITION_API_KEY` value — 4cd6f1d
 
 ### Phase 2: Smoke test + cleanup
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Build passes: `npm run build`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Build passes: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 `GET /api/nutrition-smoke-test` returns numeric macros for "chicken breast"
-- [ ] 2.5 "xyzabc123" returns all-`"missing"` fields (string, not `0`)
-- [ ] 2.6 `rawNutrients` confirms `NUTRIENT_IDS` match actual API `id` values
-- [ ] 2.7 Bad-key path returns error JSON (not a crash)
-- [ ] 2.8 Smoke-test route deleted from filesystem
-- [ ] 2.9 `npm run build` passes after route deletion
+- [x] 2.4 `GET /api/nutrition-smoke-test` returns numeric macros for "chicken breast"
+- [x] 2.5 "xyzabc123" returns all-`"missing"` fields (string, not `0`)
+- [x] 2.6 `rawNutrients` confirms `NUTRIENT_IDS` match actual API `id` values
+- [x] 2.7 Bad-key path returns error JSON (not a crash)
+- [x] 2.8 Smoke-test route deleted from filesystem
+- [x] 2.9 `npm run build` passes after route deletion

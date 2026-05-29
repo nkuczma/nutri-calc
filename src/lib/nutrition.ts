@@ -31,9 +31,8 @@ export class NutritionApiError extends Error {
 }
 
 interface ApiNutrient {
-  id: number;
+  nutrient: { id: number; name: string; unitName: string };
   amount: number;
-  unitName: string;
 }
 
 interface SearchFood {
@@ -47,16 +46,16 @@ interface SearchResponse {
 
 interface FoodDetailResponse {
   fdcId: number;
-  nutrients?: ApiNutrient[];
+  foodNutrients?: ApiNutrient[];
 }
 
 const NUTRIENT_IDS: Record<keyof IngredientNutrients, number> = {
-  // macros — from api-docs.md (verified against USDA FDC example response)
-  energy: 2000,
-  protein: 2057,
-  fat: 2058,
-  carbs: 2059,
-  fiber: 2067,
+  // macros — standard USDA 1000-series (verified via smoke test; api-docs.md 2000-series were wrong)
+  energy: 1008,
+  protein: 1003,
+  fat: 1004,
+  carbs: 1005,
+  fiber: 1079,
   // micros — USDA FDC 1000-series IDs
   sodium: 1093,
   calcium: 1087,
@@ -72,7 +71,7 @@ const NUTRIENT_IDS: Record<keyof IngredientNutrients, number> = {
 };
 
 function resolveNutrient(nutrients: ApiNutrient[], id: number): NutrientValue {
-  const found = nutrients.find((n) => n.id === id);
+  const found = nutrients.find((n) => n.nutrient.id === id);
   return found !== undefined ? found.amount : "missing";
 }
 
@@ -86,8 +85,8 @@ export async function fetchNutrients(
     throw new NutritionApiError("NUTRITION_API_KEY is not set");
   }
 
-  // Step 1: search for the ingredient
-  const searchUrl = `${FDC_BASE}/foods/search?query=${encodeURIComponent(ingredientName)}&dataType=Foundation,SR%20Legacy&pageSize=1&api_key=${apiKey}`;
+  // Step 1: search for the ingredient across all USDA food types.
+  const searchUrl = `${FDC_BASE}/foods/search?query=${encodeURIComponent(ingredientName)}&pageSize=1&api_key=${apiKey}`;
   let searchRes: Response;
   try {
     searchRes = await fetch(searchUrl);
@@ -134,7 +133,7 @@ export async function fetchNutrients(
   }
 
   const food = (await detailRes.json()) as FoodDetailResponse;
-  const nutrients: ApiNutrient[] = food.nutrients ?? [];
+  const nutrients: ApiNutrient[] = food.foodNutrients ?? [];
 
   return {
     energy: resolveNutrient(nutrients, NUTRIENT_IDS.energy),
