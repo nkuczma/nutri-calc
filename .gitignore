@@ -48,3 +48,4 @@ next-env.d.ts
 .github/**/10x-*
 .agents/**/10x-*
 .10x-**
+.claude/**/m1l5-*
