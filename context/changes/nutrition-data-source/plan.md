@@ -221,15 +221,15 @@ Two sequential USDA HTTP calls per ingredient is acceptable at MVP scale (1,000 
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx tsc --noEmit`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Build passes: `npm run build`
+- [x] 2.1 Type checking passes: `npx tsc --noEmit` — c694d5e
+- [x] 2.2 Linting passes: `npm run lint` — c694d5e
+- [x] 2.3 Build passes: `npm run build` — c694d5e
 
 #### Manual
 
-- [x] 2.4 `GET /api/nutrition-smoke-test` returns numeric macros for "chicken breast"
-- [x] 2.5 "xyzabc123" returns all-`"missing"` fields (string, not `0`)
-- [x] 2.6 `rawNutrients` confirms `NUTRIENT_IDS` match actual API `id` values
-- [x] 2.7 Bad-key path returns error JSON (not a crash)
-- [x] 2.8 Smoke-test route deleted from filesystem
-- [x] 2.9 `npm run build` passes after route deletion
+- [x] 2.4 `GET /api/nutrition-smoke-test` returns numeric macros for "chicken breast" — c694d5e
+- [x] 2.5 "xyzabc123" returns all-`"missing"` fields (string, not `0`) — c694d5e
+- [x] 2.6 `rawNutrients` confirms `NUTRIENT_IDS` match actual API `id` values — c694d5e
+- [x] 2.7 Bad-key path returns error JSON (not a crash) — c694d5e
+- [x] 2.8 Smoke-test route deleted from filesystem — c694d5e
+- [x] 2.9 `npm run build` passes after route deletion — c694d5e

@@ -2,7 +2,7 @@
 change_id: nutrition-data-source
 roadmap_id: F-02
 title: Nutrition data source client (USDA FoodData Central)
-status: implementing
+status: implemented
 created: 2026-05-29
 updated: 2026-05-29
 plan: 2026-05-29
