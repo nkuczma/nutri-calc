@@ -1,1 +1,0 @@
-Let's plan the {{platform_name}} integration and deployment according to context/foundation/infrastructure.md Be mindful about external integrations, and for edge cases, provide extra support steps. If you need to double-check anything, feel free to browse the web or GitHub issues for extra insights. Each phase should be tracked via checkboxes or some sort of indicators.
