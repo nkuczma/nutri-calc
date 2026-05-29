@@ -67,54 +67,52 @@ CLOUDFLARE_ACCOUNT_ID=
 
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
-## 10xDevs AI Toolkit - Module 2, Lesson 2
+## 10xDevs AI Toolkit - Module 2, Lesson 4
 
-Turn one roadmap item into the first implementation cycle with the **change planning chain**:
+Prepare for a harder implementation stream with the **research-backed planning chain**:
 
 ```
-/10x-roadmap -> /10x-new -> /10x-plan -> /10x-plan-review -> /10x-implement
+internal research (/10x-research) + external research (exa.ai, Context7) -> /10x-plan -> /10x-implement -> success
 ```
 
-`/10x-new`, `/10x-plan`, `/10x-plan-review`, and `/10x-implement` are the lesson focus. `/10x-frame` and `/10x-research` are not required rituals here; they are escalation paths introduced in the next lesson.
+The lesson focus is distinguishing internal from external research and using evidence to back planning decisions.
 
 ### Task Router - Where to start
 
 | Skill | Use it when |
 | --- | --- |
-| **Change setup (lesson focus)** | |
-| `/10x-new <change-id>` | You selected a roadmap item and need a stable change folder. Creates `context/changes/<change-id>/change.md` so planning, implementation, progress, commits, and later review all share one identity. Use AFTER roadmap selection, BEFORE `/10x-plan`. |
-| **Planning (lesson focus)** | |
-| `/10x-plan <change-id>` | You have a change folder and need a reviewable implementation plan. Reads roadmap context, foundation docs, codebase evidence, and any existing change notes; writes `plan.md` and `plan-brief.md` with phases, file contracts, success criteria, and `## Progress`. |
-| **Plan readiness (lesson focus)** | |
-| `/10x-plan-review <change-id>` | You have `plan.md` and need a light pre-code readiness check. Use it to catch missing end state, weak contracts, malformed progress, scope drift, or blind spots before code changes begin. |
-| **Implementation (lesson focus)** | |
-| `/10x-implement <change-id> phase <n>` | You have an approved plan and want to execute one phase with verification, manual gate, commit ritual, and SHA write-back to `## Progress`. |
-| **Lifecycle closure** | |
-| `/10x-archive <change-id>` | A change is merged or intentionally closed. Move it out of active `context/changes/` into archive state. |
+| **Internal research (lesson focus)** | |
+| `/10x-research <change-id>` | You need evidence from the existing codebase — patterns, conventions, integration points, or existing implementations. Runs parallel sub-agents over the repo and writes structured findings to `research.md`. |
+| **External research (lesson focus)** | |
+| exa.ai | You need AI-native web search for library comparisons, best practices, or ecosystem context that the codebase cannot answer. |
+| Context7 (`resolve-library-id` → `get-library-docs`) | You need live, current documentation for a specific library or framework. Resolves a library ID first, then fetches relevant doc pages. |
+| **Framing spare wheel** | |
+| `/10x-frame <change-id>` | The plan won't converge, the plan doesn't deliver expected results, or persistent drift keeps breaking the implementation. Use as an escape hatch on a separate problem (demonstrated on Space Explorers example), not as pre-research ritual. |
+| **Planning and execution** | |
+| `/10x-plan <change-id>` / `/10x-implement <change-id> phase <n>` | Use the same planning and execution chain from Lesson 2, now with upstream research evidence feeding the plan. |
 
-### How the chain hands off
+### Research discipline
 
-- `/10x-new` creates the durable change identity.
-- `/10x-plan` turns that identity into an implementation contract.
-- `/10x-plan-review` checks the plan before the agent mutates code.
-- `/10x-implement` executes one planned phase, verifies, asks for manual confirmation when needed, commits, and records progress.
+- Internal research (`/10x-research`) answers "what does our codebase already do?" — patterns, schemas, conventions, integration points.
+- External research (exa.ai, Context7) answers "what should we do?" — library capabilities, API docs, ecosystem best practices.
+- Combine both as evidence-backed input to `/10x-plan`. A plan without research evidence on a non-trivial stream is a guess.
+- Agent-friendly docs (`llms.txt`, markdown-for-agents, `/md` endpoints) are a quality signal for library selection — libraries that publish agent-readable docs integrate faster.
 
-### Lesson boundaries
+### `/10x-frame` as spare wheel
 
-- Plan is the default router after roadmap selection. Start with `/10x-plan` unless the problem is unclear or external evidence is blocking.
-- Do not run `/10x-frame + /10x-research` as ceremony for every change.
-- Do not turn this lesson into a full end-to-end product build. A checkpoint with a planned and partially or fully implemented stream is valid.
-- Code review of the implemented diff belongs to Lesson 3 via `/10x-impl-review`.
-- Lifecycle closure via `/10x-archive` after a change is merged or intentionally closed.
+Three triggers for reaching for `/10x-frame`:
+1. The plan won't converge — research keeps opening more questions instead of narrowing to a contract.
+2. The plan doesn't deliver — implementation repeatedly fails to meet success criteria.
+3. Persistent drift — the implementation keeps diverging from the plan in ways that suggest the problem was mis-framed.
+
+Demonstrated on a Space Explorers example, not the SRS path. It is an escape hatch, not a mandatory step.
 
 ### Paths used by this lesson
 
-- `context/foundation/roadmap.md` - upstream roadmap
-- `context/changes/<change-id>/change.md` - change identity
-- `context/changes/<change-id>/plan.md` - implementation contract
-- `context/changes/<change-id>/plan-brief.md` - compressed handoff
+- `context/changes/<change-id>/research.md` - internal research output
+- `context/changes/<change-id>/frame.md` - framing output when needed
+- `context/changes/<change-id>/plan.md` - evidence-backed implementation contract
 - `context/foundation/lessons.md` - recurring rules and pitfalls
-- `docs/reference/contract-surfaces.md` - load-bearing names registry
 
 Skills must not write to `context/archive/`. Archived changes are immutable; if a resolved target path starts with `context/archive/`, abort with: "This change is archived. Open a new change with `/10x-new` instead."
 
