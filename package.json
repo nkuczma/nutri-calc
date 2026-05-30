@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "supabase:link": "supabase link --project-ref zdflqcdikfpxdihrpcrx",
     "supabase:push": "supabase db push",
-    "supabase:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts"
+    "supabase:types": "supabase gen types typescript --linked --schema public 2>/dev/null > src/lib/database.types.ts"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.19.11",

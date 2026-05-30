@@ -297,27 +297,27 @@ No existing recipe data to migrate — this is the first schema. If the migratio
 
 #### Automated
 
-- [x] 1.1 `npx supabase --version` prints a version string without error
-- [x] 1.2 `supabase/migrations/` directory exists in the repo
+- [x] 1.1 `npx supabase --version` prints a version string without error — 5fdf3f7
+- [x] 1.2 `supabase/migrations/` directory exists in the repo — 5fdf3f7
 
 #### Manual
 
-- [x] 1.3 `npx supabase status` shows the linked project `zdflqcdikfpxdihrpcrx`
+- [x] 1.3 `npx supabase status` shows the linked project `zdflqcdikfpxdihrpcrx` — 5fdf3f7
 
 ### Phase 2: Schema migration + type generation
 
 #### Automated
 
-- [ ] 2.1 `npx supabase db push` exits 0 with "Applied 1 migration"
-- [ ] 2.2 `src/lib/database.types.ts` exists and is non-empty
-- [ ] 2.3 `npm run typecheck` passes with generated types in place
-- [ ] 2.4 `npm run lint` passes
+- [x] 2.1 `npx supabase db push` exits 0 with "Applied 1 migration"
+- [x] 2.2 `src/lib/database.types.ts` exists and is non-empty
+- [x] 2.3 `npm run typecheck` passes with generated types in place
+- [x] 2.4 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.5 Supabase dashboard — both `recipes` and `recipe_ingredients` tables are visible
-- [ ] 2.6 Supabase dashboard — 4 policies on `recipes`, 4 on `recipe_ingredients`
-- [ ] 2.7 Unauthenticated SELECT on `recipes` returns 0 rows
+- [x] 2.5 Supabase dashboard — both `recipes` and `recipe_ingredients` tables are visible
+- [x] 2.6 Supabase dashboard — 4 policies on `recipes`, 4 on `recipe_ingredients`
+- [x] 2.7 Unauthenticated SELECT on `recipes` returns 0 rows
 
 ### Phase 3: TypeScript boundary adapter
 
