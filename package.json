@@ -9,7 +9,11 @@
     "lint": "eslint",
     "build:worker": "opennextjs-cloudflare build",
     "deploy": "opennextjs-cloudflare build && wrangler deploy",
-    "preview": "opennextjs-cloudflare build && wrangler dev"
+    "preview": "opennextjs-cloudflare build && wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "supabase:link": "supabase link --project-ref zdflqcdikfpxdihrpcrx",
+    "supabase:push": "supabase db push",
+    "supabase:types": "supabase gen types typescript --linked --schema public 2>/dev/null > src/lib/database.types.ts"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.19.11",
@@ -26,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "supabase": "^2.102.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.94.0"
