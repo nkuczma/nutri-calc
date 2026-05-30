@@ -323,10 +323,10 @@ No existing recipe data to migrate — this is the first schema. If the migratio
 
 #### Automated
 
-- [x] 3.1 `npm run typecheck` passes with adapter types consistent with `IngredientNutrients` and `Database`
-- [x] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run typecheck` passes with adapter types consistent with `IngredientNutrients` and `Database` — 22e2a57
+- [x] 3.2 `npm run lint` passes — 22e2a57
 
 #### Manual
 
-- [x] 3.3 Smoke test: `ingredientRowToNutrients` with `vitamin_c = null, protein = 25.4` → `vitaminC: "missing", protein: 25.4`
-- [x] 3.4 Smoke test: all-non-null row produces no `"missing"` values
+- [x] 3.3 Smoke test: `ingredientRowToNutrients` with `vitamin_c = null, protein = 25.4` → `vitaminC: "missing", protein: 25.4` — 22e2a57
+- [x] 3.4 Smoke test: all-non-null row produces no `"missing"` values — 22e2a57

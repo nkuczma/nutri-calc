@@ -2,7 +2,7 @@
 change_id: recipes-schema-rls
 roadmap_id: F-03
 title: Design `recipes` + `recipe_ingredients` schema with RLS
-status: implementing
+status: implemented
 created: 2026-05-30
 updated: 2026-05-30
 ---
