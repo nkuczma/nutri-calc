@@ -308,25 +308,25 @@ No existing recipe data to migrate — this is the first schema. If the migratio
 
 #### Automated
 
-- [x] 2.1 `npx supabase db push` exits 0 with "Applied 1 migration"
-- [x] 2.2 `src/lib/database.types.ts` exists and is non-empty
-- [x] 2.3 `npm run typecheck` passes with generated types in place
-- [x] 2.4 `npm run lint` passes
+- [x] 2.1 `npx supabase db push` exits 0 with "Applied 1 migration" — 955a06d
+- [x] 2.2 `src/lib/database.types.ts` exists and is non-empty — 955a06d
+- [x] 2.3 `npm run typecheck` passes with generated types in place — 955a06d
+- [x] 2.4 `npm run lint` passes — 955a06d
 
 #### Manual
 
-- [x] 2.5 Supabase dashboard — both `recipes` and `recipe_ingredients` tables are visible
-- [x] 2.6 Supabase dashboard — 4 policies on `recipes`, 4 on `recipe_ingredients`
-- [x] 2.7 Unauthenticated SELECT on `recipes` returns 0 rows
+- [x] 2.5 Supabase dashboard — both `recipes` and `recipe_ingredients` tables are visible — 955a06d
+- [x] 2.6 Supabase dashboard — 4 policies on `recipes`, 4 on `recipe_ingredients` — 955a06d
+- [x] 2.7 Unauthenticated SELECT on `recipes` returns 0 rows — 955a06d
 
 ### Phase 3: TypeScript boundary adapter
 
 #### Automated
 
-- [ ] 3.1 `npm run typecheck` passes with adapter types consistent with `IngredientNutrients` and `Database`
-- [ ] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run typecheck` passes with adapter types consistent with `IngredientNutrients` and `Database`
+- [x] 3.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 3.3 Smoke test: `ingredientRowToNutrients` with `vitamin_c = null, protein = 25.4` → `vitaminC: "missing", protein: 25.4`
-- [ ] 3.4 Smoke test: all-non-null row produces no `"missing"` values
+- [x] 3.3 Smoke test: `ingredientRowToNutrients` with `vitamin_c = null, protein = 25.4` → `vitaminC: "missing", protein: 25.4`
+- [x] 3.4 Smoke test: all-non-null row produces no `"missing"` values
