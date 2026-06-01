@@ -16,12 +16,16 @@
     "supabase:types": "supabase gen types typescript --linked --schema public 2>/dev/null > src/lib/database.types.ts"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.195",
     "@opennextjs/cloudflare": "^1.19.11",
+    "@openrouter/ai-sdk-provider": "^2.9.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
+    "ai": "^6.0.193",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

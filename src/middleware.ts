@@ -48,7 +48,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const isPublicPath =
     pathname === '/' ||
     pathname === '/sign-in' ||
-    pathname.startsWith('/auth/')
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/api/')
 
   if (!user && !isPublicPath) {
     const signInUrl = request.nextUrl.clone()

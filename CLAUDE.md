@@ -29,7 +29,7 @@ PRD and stack decisions: `context/foundation/` — read before adding features.
 **Planned integrations (not yet implemented):**
 
 - Supabase — OAuth (Google/GitHub) + PostgreSQL for recipe storage
-- Claude API — parse unstructured recipe text into structured ingredient lists
+- OpenRouter — parse unstructured recipe text into structured ingredient lists (Claude models via OpenRouter)
 - External nutrition API (source TBD — see `context/foundation/prd.md`)
 
 ## Commands
@@ -52,8 +52,8 @@ Uses ESLint 9 flat config format (`eslint.config.mjs`). Do not create `.eslintrc
 Create `.env.local` with:
 
 ```
-# AI parsing (key name TBD — check context/foundation/tech-stack.md when decided)
-AI_API_KEY=
+# OpenRouter (AI parsing via OpenRouter)
+OPENROUTER_API_KEY=
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
