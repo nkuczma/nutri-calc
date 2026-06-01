@@ -375,28 +375,28 @@ The full three-stage interactive page at `/parse`. Single page, progressive reve
 
 #### Automated
 
-- [x] 3.1 `npm run build` passes
-- [x] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run build` passes — ecb830a
+- [x] 3.2 `npm run lint` passes — ecb830a
 
 #### Manual
 
-- [x] 3.3 POST with one ingredient returns JSON with all 16 fields (number or "missing")
-- [x] 3.4 POST with empty ingredients array returns `{ "nutrients": null }` (no error)
-- [x] 3.5 POST without auth returns 401 JSON
+- [x] 3.3 POST with one ingredient returns JSON with all 16 fields (number or "missing") — ecb830a
+- [x] 3.4 POST with empty ingredients array returns `{ "nutrients": null }` (no error) — ecb830a
+- [x] 3.5 POST without auth returns 401 JSON — ecb830a
 
 ### Phase 4: Parse Page UI
 
 #### Automated
 
-- [ ] 4.1 `npm run build` passes (full production build including all new files)
-- [ ] 4.2 `npm run lint` passes
+- [x] 4.1 `npm run build` passes (full production build including all new files)
+- [x] 4.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 4.3 Homepage "Parse a recipe" link navigates to `/parse`
-- [ ] 4.4 Streaming parse: ingredient rows appear progressively
-- [ ] 4.5 Editor: edit, remove, and add rows all work
-- [ ] 4.6 Nutritional summary renders with values and "—" for missing
-- [ ] 4.7 Empty confirm → "No ingredients to summarize" message
-- [ ] 4.8 Empty parse → inline retry message; textarea preserved
-- [ ] 4.9 Unauthenticated API call returns 401 JSON (not redirect)
+- [x] 4.3 Homepage "Parse a recipe" link navigates to `/parse`
+- [x] 4.4 Streaming parse: ingredient rows appear progressively
+- [x] 4.5 Editor: edit, remove, and add rows all work
+- [x] 4.6 Nutritional summary renders with values and "—" for missing
+- [x] 4.7 Empty confirm → "No ingredients to summarize" message
+- [x] 4.8 Empty parse → inline retry message; textarea preserved
+- [x] 4.9 Unauthenticated API call returns 401 JSON (not redirect)

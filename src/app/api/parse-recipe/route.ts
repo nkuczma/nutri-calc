@@ -1,4 +1,4 @@
-import { streamText, Output } from 'ai';
+import { streamObject } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createClient } from '@/lib/supabase/server';
 import { parseResultSchema } from '@/lib/schemas/ingredient';
@@ -14,9 +14,9 @@ export async function POST(req: Request) {
 
   const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
-  const result = streamText({
+  const result = streamObject({
     model: openrouter('openai/gpt-oss-120b:free'),
-    output: Output.object({ schema: parseResultSchema }),
+    schema: parseResultSchema,
     system: `You are a recipe parser. Extract every ingredient explicitly stated in the recipe text.
 Never invent ingredients. Never invent quantities — if a quantity is missing, default to 1.
 Set unit to empty string "" if no unit is stated.`,

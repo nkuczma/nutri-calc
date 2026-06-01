@@ -2,22 +2,22 @@ export type NutrientValue = number | "missing";
 
 export interface IngredientNutrients {
   // macros
-  energy: NutrientValue;     // kcal
-  protein: NutrientValue;    // g
-  fat: NutrientValue;        // g
-  carbs: NutrientValue;      // g
-  fiber: NutrientValue;      // g
+  energy: NutrientValue; // kcal
+  protein: NutrientValue; // g
+  fat: NutrientValue; // g
+  carbs: NutrientValue; // g
+  fiber: NutrientValue; // g
   // micros
-  sodium: NutrientValue;     // mg
-  calcium: NutrientValue;    // mg
-  iron: NutrientValue;       // mg
-  vitaminC: NutrientValue;   // mg
-  vitaminD: NutrientValue;   // µg
-  zinc: NutrientValue;       // mg
-  potassium: NutrientValue;  // mg
+  sodium: NutrientValue; // mg
+  calcium: NutrientValue; // mg
+  iron: NutrientValue; // mg
+  vitaminC: NutrientValue; // mg
+  vitaminD: NutrientValue; // µg
+  zinc: NutrientValue; // mg
+  potassium: NutrientValue; // mg
   vitaminB12: NutrientValue; // µg
-  folate: NutrientValue;     // µg
-  magnesium: NutrientValue;  // mg
+  folate: NutrientValue; // µg
+  magnesium: NutrientValue; // mg
   phosphorus: NutrientValue; // mg
 }
 
@@ -38,6 +38,7 @@ interface ApiNutrient {
 interface SearchFood {
   fdcId: number;
   description: string;
+  dataType?: string;
 }
 
 interface SearchResponse {
@@ -78,27 +79,28 @@ function resolveNutrient(nutrients: ApiNutrient[], id: number): NutrientValue {
 const FDC_BASE = "https://api.nal.usda.gov/fdc/v1";
 
 export async function fetchNutrients(
-  ingredientName: string
+  ingredientValue: string,
 ): Promise<IngredientNutrients> {
   const apiKey = process.env.NUTRITION_API_KEY;
   if (!apiKey) {
     throw new NutritionApiError("NUTRITION_API_KEY is not set");
   }
 
-  // Step 1: search for the ingredient across all USDA food types.
-  const searchUrl = `${FDC_BASE}/foods/search?query=${encodeURIComponent(ingredientName)}&pageSize=1&api_key=${apiKey}`;
+  // Step 1: search for the ingredient — fetch up to 5 candidates to survive 404 detail misses.
+  const searchUrl = `${FDC_BASE}/foods/search?query=${encodeURIComponent(ingredientValue)}&pageSize=5&api_key=${apiKey}`;
+  console.log(searchUrl);
   let searchRes: Response;
   try {
     searchRes = await fetch(searchUrl);
   } catch (err) {
     throw new NutritionApiError(
-      `USDA search request failed: ${err instanceof Error ? err.message : String(err)}`
+      `USDA search request failed: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   if (!searchRes.ok) {
     throw new NutritionApiError(
       `USDA search returned ${searchRes.status}`,
-      searchRes.status
+      searchRes.status,
     );
   }
 
@@ -106,34 +108,82 @@ export async function fetchNutrients(
   if (!searchData.foods || searchData.foods.length === 0) {
     const missing = "missing" as const;
     return {
-      energy: missing, protein: missing, fat: missing, carbs: missing, fiber: missing,
-      sodium: missing, calcium: missing, iron: missing, vitaminC: missing, vitaminD: missing,
-      zinc: missing, potassium: missing, vitaminB12: missing, folate: missing,
-      magnesium: missing, phosphorus: missing,
+      energy: missing,
+      protein: missing,
+      fat: missing,
+      carbs: missing,
+      fiber: missing,
+      sodium: missing,
+      calcium: missing,
+      iron: missing,
+      vitaminC: missing,
+      vitaminD: missing,
+      zinc: missing,
+      potassium: missing,
+      vitaminB12: missing,
+      folate: missing,
+      magnesium: missing,
+      phosphorus: missing,
     };
   }
 
-  const fdcId = searchData.foods[0].fdcId;
-
-  // Step 2: fetch full nutrient detail
-  const detailUrl = `${FDC_BASE}/food/${fdcId}?api_key=${apiKey}`;
-  let detailRes: Response;
-  try {
-    detailRes = await fetch(detailUrl);
-  } catch (err) {
-    throw new NutritionApiError(
-      `USDA food detail request failed: ${err instanceof Error ? err.message : String(err)}`
-    );
+  // Step 2: try each candidate until a detail call succeeds (some fdcIds return 404).
+  // Prefer SR Legacy (most complete micronutrient data) for stable, consistent results.
+  const DATA_TYPE_RANK: Record<string, number> = {
+    "SR Legacy": 0,
+    Foundation: 1,
+  };
+  const candidates = [...searchData.foods].sort(
+    (a, b) =>
+      (DATA_TYPE_RANK[a.dataType ?? ""] ?? 2) -
+      (DATA_TYPE_RANK[b.dataType ?? ""] ?? 2),
+  );
+  let nutrients: ApiNutrient[] = [];
+  let detailFetched = false;
+  for (const candidate of candidates) {
+    const detailUrl = `${FDC_BASE}/food/${candidate.fdcId}?api_key=${apiKey}`;
+    let detailRes: Response;
+    try {
+      detailRes = await fetch(detailUrl);
+    } catch (err) {
+      throw new NutritionApiError(
+        `USDA food detail request failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    if (!detailRes.ok) {
+      if (detailRes.status === 404) continue;
+      throw new NutritionApiError(
+        `USDA food detail returned ${detailRes.status}`,
+        detailRes.status,
+      );
+    }
+    const food = (await detailRes.json()) as FoodDetailResponse;
+    nutrients = food.foodNutrients ?? [];
+    detailFetched = true;
+    break;
   }
-  if (!detailRes.ok) {
-    throw new NutritionApiError(
-      `USDA food detail returned ${detailRes.status}`,
-      detailRes.status
-    );
-  }
 
-  const food = (await detailRes.json()) as FoodDetailResponse;
-  const nutrients: ApiNutrient[] = food.foodNutrients ?? [];
+  if (!detailFetched) {
+    const missing = "missing" as const;
+    return {
+      energy: missing,
+      protein: missing,
+      fat: missing,
+      carbs: missing,
+      fiber: missing,
+      sodium: missing,
+      calcium: missing,
+      iron: missing,
+      vitaminC: missing,
+      vitaminD: missing,
+      zinc: missing,
+      potassium: missing,
+      vitaminB12: missing,
+      folate: missing,
+      magnesium: missing,
+      phosphorus: missing,
+    };
+  }
 
   return {
     energy: resolveNutrient(nutrients, NUTRIENT_IDS.energy),
