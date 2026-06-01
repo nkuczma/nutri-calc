@@ -40,6 +40,7 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 | S-04  | list-saved-recipes       | view their saved recipes in chronological order                                                     | S-03             | FR-008, NFR data isolation        | proposed |
 | S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | blocked  |
 | S-06  | delete-saved-recipe      | delete a saved recipe                                                                               | S-04             | FR-010                            | proposed |
+| S-07  | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup | S-01         | FR-003, FR-005                    | proposed |
 
 ## Streams
 
@@ -183,6 +184,19 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** Table-stakes for user-owned data. The only sequencing concern: cascade rule at the DB level (`recipe_ingredients` rows deleted when parent `recipes` row is deleted) — handled in F-03's schema, not deferred to application code.
 - **Status:** proposed
 
+### S-07: ingredient-unit-handling
+
+- **Outcome:** units on AI-parsed and manually-entered ingredients (e.g. "slice", "cup", "tbsp", "g") are resolved to a quantity in grams (or other base unit the nutrition API accepts) before the nutrition lookup runs; unrecognised units surface as an explicit warning rather than silently passing the raw string through.
+- **Change ID:** ingredient-unit-handling
+- **PRD refs:** FR-003 (structured parse output must include unit), FR-005 (nutrition lookup receives correct quantity)
+- **Prerequisites:** S-01
+- **Parallel with:** S-02 (unit resolution is shared logic; wire into manual entry path at the same time)
+- **Blockers:** —
+- **Unknowns:**
+  - Does USDA FoodData Central accept a `portionCode` / `gramWeight` parameter that can absorb a resolved gram-weight directly, or must the unit normalisation happen entirely client-side? Owner: implementer (check `src/lib/nutrition.ts` + USDA API docs during planning). Block: no.
+- **Risk:** Observed gap during S-01 implementation — units were parsed as strings but never converted, so a "1 slice" ingredient and a "100 g" ingredient both hit the nutrition API with quantity `1`. Silent incorrect totals break the core trust contract more badly than a missing-flag would. Fix must not silently zero: an unresolvable unit must propagate as `"missing"` for that ingredient's nutrients.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                | Suggested issue title                                                       | Ready for `/10x-plan` | Notes                                                                                               |
@@ -196,6 +210,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                          | no                    | Waits on S-03. No search / filter for MVP.                                                          |
 | S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Blocked on Open Roadmap Question #2 (nutrition re-fetch on edit).                                   |
 | S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | no                    | Waits on S-04. Parallel with S-05.                                                                  |
+| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup   | no                    | Waits on S-01. Wire into S-02 (manual entry) at the same time. Unresolvable unit → `"missing"`, never silent zero. |
 
 ## Open Roadmap Questions
 
