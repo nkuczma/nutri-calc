@@ -350,26 +350,26 @@ The full three-stage interactive page at `/parse`. Single page, progressive reve
 
 #### Automated
 
-- [x] 1.1 Install completes without errors: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4`
-- [x] 1.2 Dev server starts without fatal error: `npm run dev`
-- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Install completes without errors: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4` — c605886
+- [x] 1.2 Dev server starts without fatal error: `npm run dev` — c605886
+- [x] 1.3 Lint passes: `npm run lint` — c605886
 
 #### Manual
 
-- [x] 1.4 Dev server reachable at localhost:3000
-- [x] 1.5 No TypeScript errors in IDE for new AI SDK imports
+- [x] 1.4 Dev server reachable at localhost:3000 — c605886
+- [x] 1.5 No TypeScript errors in IDE for new AI SDK imports — c605886
 
 ### Phase 2: Zod Schema and AI Parse Route
 
 #### Automated
 
-- [ ] 2.1 `npm run build` passes
-- [ ] 2.2 `npm run lint` passes
+- [x] 2.1 `npm run build` passes
+- [x] 2.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.3 Unauthenticated POST to `/api/parse-recipe` returns 401 JSON
-- [ ] 2.4 Signed-in POST with recipe text returns event stream; partial ingredients arrive and stream closes
+- [x] 2.3 Unauthenticated POST to `/api/parse-recipe` returns 401 JSON
+- [x] 2.4 Signed-in POST with recipe text returns event stream; partial ingredients arrive and stream closes
 
 ### Phase 3: Nutrition Summary Route
 
