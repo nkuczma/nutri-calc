@@ -388,15 +388,15 @@ The full three-stage interactive page at `/parse`. Single page, progressive reve
 
 #### Automated
 
-- [x] 4.1 `npm run build` passes (full production build including all new files)
-- [x] 4.2 `npm run lint` passes
+- [x] 4.1 `npm run build` passes (full production build including all new files) — 82af81b
+- [x] 4.2 `npm run lint` passes — 82af81b
 
 #### Manual
 
-- [x] 4.3 Homepage "Parse a recipe" link navigates to `/parse`
-- [x] 4.4 Streaming parse: ingredient rows appear progressively
-- [x] 4.5 Editor: edit, remove, and add rows all work
-- [x] 4.6 Nutritional summary renders with values and "—" for missing
-- [x] 4.7 Empty confirm → "No ingredients to summarize" message
-- [x] 4.8 Empty parse → inline retry message; textarea preserved
-- [x] 4.9 Unauthenticated API call returns 401 JSON (not redirect)
+- [x] 4.3 Homepage "Parse a recipe" link navigates to `/parse` — 82af81b
+- [x] 4.4 Streaming parse: ingredient rows appear progressively — 82af81b
+- [x] 4.5 Editor: edit, remove, and add rows all work — 82af81b
+- [x] 4.6 Nutritional summary renders with values and "—" for missing — 82af81b
+- [x] 4.7 Empty confirm → "No ingredients to summarize" message — 82af81b
+- [x] 4.8 Empty parse → inline retry message; textarea preserved — 82af81b
+- [x] 4.9 Unauthenticated API call returns 401 JSON (not redirect) — 82af81b

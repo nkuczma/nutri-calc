@@ -1,7 +1,7 @@
 ---
 change_id: paste-parse-summary
 title: "S-01: paste → AI parse → editable ingredient list → nutritional summary"
-status: implementing
+status: implemented
 created: 2026-05-30
 updated: 2026-06-01
 roadmap_id: S-01
