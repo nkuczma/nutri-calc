@@ -6,7 +6,7 @@ S-01 end-to-end feature: user pastes raw recipe text, AI streams back a parsed i
 
 ## Current State Analysis
 
-Auth middleware, Supabase SSR, and `fetchNutrients` are all in place. The four AI packages are missing. No parse page, no AI parse route, and no nutrition summary route exist yet. The env var name established in `CLAUDE.md` (`AI_API_KEY`) conflicts with `@ai-sdk/anthropic`'s auto-read default (`ANTHROPIC_API_KEY`) — must be handled explicitly.
+Auth middleware, Supabase SSR, and `fetchNutrients` are all in place. The four AI packages are missing. No parse page, no AI parse route, and no nutrition summary route exist yet. AI provider is **OpenRouter** (`@openrouter/ai-sdk-provider`); env var is `OPENROUTER_API_KEY`.
 
 ## Desired End State
 
@@ -52,11 +52,11 @@ Three server/client interactions with clear ownership:
 
 **`submit()` must not pre-serialize**: `useObject` calls `JSON.stringify` internally. Passing `submit(JSON.stringify({ recipeText: text }))` double-serializes — pass the object directly: `submit({ recipeText: text })`.
 
-**Env var name**: Both API routes must use `createAnthropic({ apiKey: process.env.AI_API_KEY })`. Do NOT use the bare `anthropic` import shorthand — it reads `ANTHROPIC_API_KEY`, which is not set.
+**Provider**: Both API routes must use `createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY })` from `@openrouter/ai-sdk-provider`. Do NOT use any Anthropic-specific import.
 
 **`streamText + Output.object`, not `streamObject`**: `streamObject` has a known RegExp CPU spike on Cloudflare Workers (vercel/ai#6492). The impl-docs already use the correct pattern; do not deviate.
 
-**Model ID**: Use the full versioned ID `claude-haiku-4-5-20251001`. The short alias `claude-haiku-4-5` is unverified.
+**Model ID**: Use OpenRouter format `anthropic/claude-haiku-4-5`. Verify the exact ID at https://openrouter.ai/models before implementing.
 
 **Style imports after TS/JS imports**: Any new component file importing both modules and Tailwind classes must place CSS/style imports last (from `context/foundation/lessons.md`).
 
@@ -76,21 +76,21 @@ Install the four AI packages and add the missing API key to `.env.local`. No sou
 
 **Intent**: Add all four AI SDK packages. Pin `zod@^4` explicitly — the schema file uses v4 API.
 
-**Contract**: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4`
+**Contract**: `npm install ai @openrouter/ai-sdk-provider @ai-sdk/react zod@^4`
 
-#### 2. AI_API_KEY env var
+#### 2. OPENROUTER_API_KEY env var
 
 **File**: `.env.local`
 
-**Intent**: Add the Anthropic key under the name established in `CLAUDE.md`. Do not add `ANTHROPIC_API_KEY` — that creates a second source of truth for the same secret.
+**Intent**: Add the OpenRouter API key.
 
-**Contract**: Append `AI_API_KEY=sk-ant-...` to `.env.local`.
+**Contract**: Append `OPENROUTER_API_KEY=sk-or-...` to `.env.local`.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- Install completes without errors: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4`
+- Install completes without errors: `npm install ai @openrouter/ai-sdk-provider @ai-sdk/react zod@^4`
 - Dev server starts without fatal error: `npm run dev`
 - Lint passes: `npm run lint`
 
@@ -136,12 +136,12 @@ const supabase = await createClient();   // from '@/lib/supabase/server'
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-// Provider — reads AI_API_KEY, NOT ANTHROPIC_API_KEY
-const anthropic = createAnthropic({ apiKey: process.env.AI_API_KEY });
+// Provider — reads OPENROUTER_API_KEY
+const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
 // Streaming pattern — use streamText + Output.object, NOT streamObject
 const result = streamText({
-  model: anthropic('claude-haiku-4-5-20251001'),
+  model: openrouter('anthropic/claude-haiku-4-5'),
   output: Output.object({ schema: parseResultSchema }),
   system: `...`,
   prompt: recipeText,
@@ -162,7 +162,7 @@ System prompt must instruct: extract only explicitly stated ingredients; never i
 #### Manual Verification
 
 - `curl -X POST http://localhost:3000/api/parse-recipe -H "Content-Type: application/json" -d '{"recipeText":"test"}'` without auth cookie returns JSON `{ "error": "Unauthorized" }` with HTTP 401
-- Signed-in user: POST with `{ "recipeText": "2 cups flour, 1 tsp salt, 3 eggs" }` returns an event stream; partial ingredient objects arrive and the stream closes
+- Signed-in user: POST with `{ "recipeText": "2 cups flour, 1 tsp salt, 3 eggs" }` returns an event stream; partial ingredient objects arrive and the stream closes. **Smoke-test `Output.object` via OpenRouter**: confirm the streamed text is valid JSON matching `parseResultSchema` (i.e. `{ ingredients: [{ name, quantity, unit }, ...] }`), not raw text — this validates OpenRouter's Claude routing honours schema injection.
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to Phase 3.
 
@@ -350,14 +350,14 @@ The full three-stage interactive page at `/parse`. Single page, progressive reve
 
 #### Automated
 
-- [ ] 1.1 Install completes without errors: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4`
-- [ ] 1.2 Dev server starts without fatal error: `npm run dev`
-- [ ] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Install completes without errors: `npm install ai @ai-sdk/anthropic @ai-sdk/react zod@^4`
+- [x] 1.2 Dev server starts without fatal error: `npm run dev`
+- [x] 1.3 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 1.4 Dev server reachable at localhost:3000
-- [ ] 1.5 No TypeScript errors in IDE for new AI SDK imports
+- [x] 1.4 Dev server reachable at localhost:3000
+- [x] 1.5 No TypeScript errors in IDE for new AI SDK imports
 
 ### Phase 2: Zod Schema and AI Parse Route
 
