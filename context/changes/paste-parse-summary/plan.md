@@ -363,26 +363,26 @@ The full three-stage interactive page at `/parse`. Single page, progressive reve
 
 #### Automated
 
-- [x] 2.1 `npm run build` passes
-- [x] 2.2 `npm run lint` passes
+- [x] 2.1 `npm run build` passes — 432d66d
+- [x] 2.2 `npm run lint` passes — 432d66d
 
 #### Manual
 
-- [x] 2.3 Unauthenticated POST to `/api/parse-recipe` returns 401 JSON
-- [x] 2.4 Signed-in POST with recipe text returns event stream; partial ingredients arrive and stream closes
+- [x] 2.3 Unauthenticated POST to `/api/parse-recipe` returns 401 JSON — 432d66d
+- [x] 2.4 Signed-in POST with recipe text returns event stream; partial ingredients arrive and stream closes — 432d66d
 
 ### Phase 3: Nutrition Summary Route
 
 #### Automated
 
-- [ ] 3.1 `npm run build` passes
-- [ ] 3.2 `npm run lint` passes
+- [x] 3.1 `npm run build` passes
+- [x] 3.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 3.3 POST with one ingredient returns JSON with all 16 fields (number or "missing")
-- [ ] 3.4 POST with empty ingredients array returns `{ "nutrients": null }` (no error)
-- [ ] 3.5 POST without auth returns 401 JSON
+- [x] 3.3 POST with one ingredient returns JSON with all 16 fields (number or "missing")
+- [x] 3.4 POST with empty ingredients array returns `{ "nutrients": null }` (no error)
+- [x] 3.5 POST without auth returns 401 JSON
 
 ### Phase 4: Parse Page UI
 
