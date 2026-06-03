@@ -3,7 +3,7 @@ project: NutriCalc
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-06-03
+updated: 2026-06-04
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -38,7 +38,7 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 | S-02 | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary                       | F-01, F-02    | FR-004, FR-005, FR-006                                   | done     |
 | S-03 | save-recipe              | save a parsed or manually-created recipe to their account                                                           | S-01, F-03    | FR-007, NFR data isolation                               | done     |
 | S-04 | list-saved-recipes       | view their saved recipes in chronological order                                                                     | S-03          | FR-008, NFR data isolation                               | done     |
-| S-05 | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                                     | S-04          | FR-009                                                   | proposed |
+| S-05 | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                                     | S-04          | FR-009                                                   | done     |
 | S-06 | delete-saved-recipe      | delete a saved recipe                                                                                               | S-04          | FR-010                                                   | done     |
 | S-07 | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup              | S-01          | FR-003, FR-005                                           | done     |
 | S-08 | landing-page             | visit the app unauthenticated and see a landing page explaining what the app does, before being prompted to sign in | —             | —                                                        | done     |
@@ -171,7 +171,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - ~~When the user edits an ingredient (e.g., changes "salmon" to "tuna"), does the per-ingredient nutritional snapshot re-fetch from F-02's client at view-time, or stay frozen at save-time?~~ Resolved: re-fetch from F-02 when the user saves an edit. A frozen snapshot that diverges from the displayed ingredient list violates the trust contract. No re-fetch on view-only load.
 - **Risk:** Edit semantics are scoped down (no AI re-parse), but the nutrition recompute question is load-bearing — get it wrong and the summary drifts from the displayed ingredient list, violating the core trust contract.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: delete-saved-recipe
 
@@ -221,7 +221,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                     | done                  | Shipped. PR merged.                                                                        |
 | S-03       | save-recipe              | Save parsed / manual recipe to account                                   | done                  | Shipped. Atomic RPC + Save button on both Manual and AI parse flows.                       |
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                       | done                  | Shipped as part of manual-recipe-entry.                                                    |
-| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                | ready to 10x-plan     | S-04 shipped. Re-fetch F-02 on edit save (Open Roadmap Q #2 resolved). Parallel with S-06. |
+| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                | done                  | Shipped. PR #19 merged. Inline edit UI + updateRecipe server action + update_recipe RPC.   |
 | S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                | done                  | Shipped.                                                                                    |
 | S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup | done                  | Shipped. PR #14 merged.                                                                    |
 | S-08       | landing-page             | Marketing/explainer landing page for unauthenticated visitors            | done                  | Shipped. No prerequisites. Purely presentational; authenticated users redirect past it.    |
@@ -257,4 +257,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-04 | list-saved-recipes       | Shipped as part of manual-recipe-entry                                                         | 2026-06-03 |
 | S-03 | save-recipe              | Atomic RPC save + Save button on AI parse and manual entry flows                               | 2026-06-03 |
 | S-06 | delete-saved-recipe      | Delete a saved recipe; cascade to `recipe_ingredients` via FK in F-03 schema                   | 2026-06-03 |
+| S-05 | edit-saved-recipe        | Inline edit UI on `/recipes/[id]`; unit normalize → nutrition re-fetch → atomic update_recipe RPC | 2026-06-04 |
 | S-08 | landing-page             | Unauthenticated landing page with value prop + sign-in CTA; authenticated users redirected     | 2026-06-03 |
