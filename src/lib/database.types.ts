@@ -16,76 +16,55 @@ export type Database = {
     Tables: {
       recipe_ingredients: {
         Row: {
-          calcium: number | null
-          carbs: number | null
+          id: string
+          recipe_id: string
+          name: string
+          quantity: number
+          unit: string
           created_at: string
           energy: number | null
-          fat: number | null
-          fiber: number | null
-          folate: number | null
-          id: string
-          iron: number | null
-          magnesium: number | null
-          name: string
-          phosphorus: number | null
-          potassium: number | null
           protein: number | null
-          quantity: number
-          recipe_id: string
+          fat: number | null
+          saturated_fat: number | null
+          carbs: number | null
+          fiber: number | null
+          sugars: number | null
+          salt: number | null
           sodium: number | null
-          unit: string
-          vitamin_b12: number | null
-          vitamin_c: number | null
-          vitamin_d: number | null
-          zinc: number | null
         }
         Insert: {
-          calcium?: number | null
-          carbs?: number | null
+          id?: string
+          recipe_id: string
+          name: string
+          quantity: number
+          unit: string
           created_at?: string
           energy?: number | null
-          fat?: number | null
-          fiber?: number | null
-          folate?: number | null
-          id?: string
-          iron?: number | null
-          magnesium?: number | null
-          name: string
-          phosphorus?: number | null
-          potassium?: number | null
           protein?: number | null
-          quantity: number
-          recipe_id: string
+          fat?: number | null
+          saturated_fat?: number | null
+          carbs?: number | null
+          fiber?: number | null
+          sugars?: number | null
+          salt?: number | null
           sodium?: number | null
-          unit: string
-          vitamin_b12?: number | null
-          vitamin_c?: number | null
-          vitamin_d?: number | null
-          zinc?: number | null
         }
         Update: {
-          calcium?: number | null
-          carbs?: number | null
+          id?: string
+          recipe_id?: string
+          name?: string
+          quantity?: number
+          unit?: string
           created_at?: string
           energy?: number | null
-          fat?: number | null
-          fiber?: number | null
-          folate?: number | null
-          id?: string
-          iron?: number | null
-          magnesium?: number | null
-          name?: string
-          phosphorus?: number | null
-          potassium?: number | null
           protein?: number | null
-          quantity?: number
-          recipe_id?: string
+          fat?: number | null
+          saturated_fat?: number | null
+          carbs?: number | null
+          fiber?: number | null
+          sugars?: number | null
+          salt?: number | null
           sodium?: number | null
-          unit?: string
-          vitamin_b12?: number | null
-          vitamin_c?: number | null
-          vitamin_d?: number | null
-          zinc?: number | null
         }
         Relationships: [
           {
@@ -99,73 +78,52 @@ export type Database = {
       }
       recipes: {
         Row: {
-          created_at: string
           id: string
-          raw_text: string | null
-          title: string
-          total_calcium: number | null
-          total_carbs: number | null
-          total_energy: number | null
-          total_fat: number | null
-          total_fiber: number | null
-          total_folate: number | null
-          total_iron: number | null
-          total_magnesium: number | null
-          total_phosphorus: number | null
-          total_potassium: number | null
-          total_protein: number | null
-          total_sodium: number | null
-          total_vitamin_b12: number | null
-          total_vitamin_c: number | null
-          total_vitamin_d: number | null
-          total_zinc: number | null
           user_id: string
+          title: string
+          raw_text: string | null
+          created_at: string
+          total_energy: number | null
+          total_protein: number | null
+          total_fat: number | null
+          total_saturated_fat: number | null
+          total_carbs: number | null
+          total_fiber: number | null
+          total_sugars: number | null
+          total_salt: number | null
+          total_sodium: number | null
         }
         Insert: {
-          created_at?: string
           id?: string
-          raw_text?: string | null
-          title: string
-          total_calcium?: number | null
-          total_carbs?: number | null
-          total_energy?: number | null
-          total_fat?: number | null
-          total_fiber?: number | null
-          total_folate?: number | null
-          total_iron?: number | null
-          total_magnesium?: number | null
-          total_phosphorus?: number | null
-          total_potassium?: number | null
-          total_protein?: number | null
-          total_sodium?: number | null
-          total_vitamin_b12?: number | null
-          total_vitamin_c?: number | null
-          total_vitamin_d?: number | null
-          total_zinc?: number | null
           user_id: string
+          title: string
+          raw_text?: string | null
+          created_at?: string
+          total_energy?: number | null
+          total_protein?: number | null
+          total_fat?: number | null
+          total_saturated_fat?: number | null
+          total_carbs?: number | null
+          total_fiber?: number | null
+          total_sugars?: number | null
+          total_salt?: number | null
+          total_sodium?: number | null
         }
         Update: {
-          created_at?: string
           id?: string
-          raw_text?: string | null
-          title?: string
-          total_calcium?: number | null
-          total_carbs?: number | null
-          total_energy?: number | null
-          total_fat?: number | null
-          total_fiber?: number | null
-          total_folate?: number | null
-          total_iron?: number | null
-          total_magnesium?: number | null
-          total_phosphorus?: number | null
-          total_potassium?: number | null
-          total_protein?: number | null
-          total_sodium?: number | null
-          total_vitamin_b12?: number | null
-          total_vitamin_c?: number | null
-          total_vitamin_d?: number | null
-          total_zinc?: number | null
           user_id?: string
+          title?: string
+          raw_text?: string | null
+          created_at?: string
+          total_energy?: number | null
+          total_protein?: number | null
+          total_fat?: number | null
+          total_saturated_fat?: number | null
+          total_carbs?: number | null
+          total_fiber?: number | null
+          total_sugars?: number | null
+          total_salt?: number | null
+          total_sodium?: number | null
         }
         Relationships: []
       }

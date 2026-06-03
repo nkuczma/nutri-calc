@@ -62,6 +62,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 # Nutrition API (source TBD — see context/foundation/prd.md open questions)
 NUTRITION_API_KEY=
 
+# Spoonacular (unit conversion — cups/tbsp/tsp → grams)
+SPOONACULAR_API_KEY=
+
 # Cloudflare deployment
 CLOUDFLARE_ACCOUNT_ID=
 ```

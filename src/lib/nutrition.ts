@@ -1,24 +1,22 @@
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { generateText } from "ai";
+
 export type NutrientValue = number | "missing";
 
+// Nutrients available from Open Food Facts per 100g.
+// Micronutrients (vitamins, minerals) are not provided by OFF
+// and have been removed from the data model.
 export interface IngredientNutrients {
-  // macros
+  // macros (absent → 0, not "missing")
   energy: NutrientValue; // kcal
   protein: NutrientValue; // g
   fat: NutrientValue; // g
+  saturatedFat: NutrientValue; // g
   carbs: NutrientValue; // g
   fiber: NutrientValue; // g
-  // micros
+  sugars: NutrientValue; // g
+  salt: NutrientValue; // g
   sodium: NutrientValue; // mg
-  calcium: NutrientValue; // mg
-  iron: NutrientValue; // mg
-  vitaminC: NutrientValue; // mg
-  vitaminD: NutrientValue; // µg
-  zinc: NutrientValue; // mg
-  potassium: NutrientValue; // mg
-  vitaminB12: NutrientValue; // µg
-  folate: NutrientValue; // µg
-  magnesium: NutrientValue; // mg
-  phosphorus: NutrientValue; // mg
 }
 
 export class NutritionApiError extends Error {
@@ -30,177 +28,169 @@ export class NutritionApiError extends Error {
   }
 }
 
-interface ApiNutrient {
-  nutrient: { id: number; name: string; unitName: string };
-  amount: number;
+// Open Food Facts nutriments object (values per 100g)
+interface OFFNutriments {
+  "energy-kcal_100g"?: number;
+  proteins_100g?: number;
+  fat_100g?: number;
+  "saturated-fat_100g"?: number;
+  carbohydrates_100g?: number;
+  fiber_100g?: number;
+  sugars_100g?: number;
+  salt_100g?: number;
+  // sodium in grams (OFF convention); sodium = salt / 2.5
+  sodium_100g?: number;
 }
 
-interface SearchFood {
-  fdcId: number;
-  description: string;
-  dataType?: string;
+interface OFFProduct {
+  code: string;
+  product_name?: string;
+  brands?: string;
+  nutriments?: OFFNutriments;
 }
 
-interface SearchResponse {
-  foods?: SearchFood[];
+interface OFFSearchResponse {
+  hits?: OFFProduct[];
+  products?: OFFProduct[]; // legacy endpoint fallback shape
+  count?: number;
 }
 
-interface FoodDetailResponse {
-  fdcId: number;
-  foodNutrients?: ApiNutrient[];
+const OFF_SEARCH = "https://search.openfoodfacts.org/search";
+
+function num(v: number | undefined): NutrientValue {
+  return typeof v === "number" && isFinite(v) ? v : "missing";
 }
 
-const NUTRIENT_IDS: Record<keyof IngredientNutrients, number> = {
-  // macros — standard USDA 1000-series (verified via smoke test; api-docs.md 2000-series were wrong)
-  energy: 1008,
-  protein: 1003,
-  fat: 1004,
-  carbs: 1005,
-  fiber: 1079,
-  // micros — USDA FDC 1000-series IDs
-  sodium: 1093,
-  calcium: 1087,
-  iron: 1089,
-  vitaminC: 1162,
-  vitaminD: 1114,
-  zinc: 1095,
-  potassium: 1092,
-  vitaminB12: 1178,
-  folate: 1186,
-  magnesium: 1090,
-  phosphorus: 1091,
+function extractNutrients(p: OFFProduct): IngredientNutrients {
+  const n = p.nutriments ?? {};
+  // OFF stores sodium in grams; derive from salt if sodium absent
+  const sodiumG = n.sodium_100g ?? (n.salt_100g != null ? n.salt_100g / 2.5 : undefined);
+  const sodiumMg = sodiumG != null ? sodiumG * 1000 : undefined;
+
+  return {
+    energy:       num(n["energy-kcal_100g"]),
+    protein:      num(n.proteins_100g),
+    fat:          num(n.fat_100g),
+    saturatedFat: num(n["saturated-fat_100g"]),
+    carbs:        num(n.carbohydrates_100g),
+    fiber:        num(n.fiber_100g),
+    sugars:       num(n.sugars_100g),
+    salt:         num(n.salt_100g),
+    sodium:       num(sodiumMg),
+  };
+}
+
+const EMPTY_NUTRIENTS: IngredientNutrients = {
+  energy: 0,
+  protein: 0,
+  fat: 0,
+  saturatedFat: "missing",
+  carbs: 0,
+  fiber: "missing",
+  sugars: "missing",
+  salt: "missing",
+  sodium: "missing",
 };
-
-function resolveNutrient(nutrients: ApiNutrient[], id: number): NutrientValue {
-  const found = nutrients.find((n) => n.nutrient.id === id);
-  return found !== undefined ? found.amount : "missing";
-}
-
-const FDC_BASE = "https://api.nal.usda.gov/fdc/v1";
 
 export async function fetchNutrients(
   ingredientValue: string,
+  weightGrams?: number,
 ): Promise<IngredientNutrients> {
-  const apiKey = process.env.NUTRITION_API_KEY;
-  if (!apiKey) {
-    throw new NutritionApiError("NUTRITION_API_KEY is not set");
-  }
+  // Step 1: search Open Food Facts — fetch top 10 candidates.
+  const searchUrl = `${OFF_SEARCH}?q=${encodeURIComponent(ingredientValue)}&page_size=10&fields=code,product_name,brands,nutriments&json=1`;
 
-  // Step 1: search for the ingredient — fetch up to 5 candidates to survive 404 detail misses.
-  const searchUrl = `${FDC_BASE}/foods/search?query=${encodeURIComponent(ingredientValue)}&pageSize=5&api_key=${apiKey}`;
-  console.log(searchUrl);
   let searchRes: Response;
   try {
-    searchRes = await fetch(searchUrl);
+    searchRes = await fetch(searchUrl, {
+      headers: { "User-Agent": "NutriCalc/1.0 (natalia.kuczma@noaignite.com)" },
+    });
   } catch (err) {
     throw new NutritionApiError(
-      `USDA search request failed: ${err instanceof Error ? err.message : String(err)}`,
+      `Open Food Facts search request failed: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   if (!searchRes.ok) {
     throw new NutritionApiError(
-      `USDA search returned ${searchRes.status}`,
+      `Open Food Facts search returned ${searchRes.status}`,
       searchRes.status,
     );
   }
 
-  const searchData = (await searchRes.json()) as SearchResponse;
-  if (!searchData.foods || searchData.foods.length === 0) {
-    const missing = "missing" as const;
-    return {
-      energy: missing,
-      protein: missing,
-      fat: missing,
-      carbs: missing,
-      fiber: missing,
-      sodium: missing,
-      calcium: missing,
-      iron: missing,
-      vitaminC: missing,
-      vitaminD: missing,
-      zinc: missing,
-      potassium: missing,
-      vitaminB12: missing,
-      folate: missing,
-      magnesium: missing,
-      phosphorus: missing,
-    };
+  const searchData = (await searchRes.json()) as OFFSearchResponse;
+  const products = searchData.hits ?? searchData.products ?? [];
+  if (products.length === 0) {
+    return EMPTY_NUTRIENTS;
   }
 
-  // Step 2: try each candidate until a detail call succeeds (some fdcIds return 404).
-  // Prefer SR Legacy (most complete micronutrient data) for stable, consistent results.
-  const DATA_TYPE_RANK: Record<string, number> = {
-    "SR Legacy": 0,
-    Foundation: 1,
-  };
-  const candidates = [...searchData.foods].sort(
-    (a, b) =>
-      (DATA_TYPE_RANK[a.dataType ?? ""] ?? 2) -
-      (DATA_TYPE_RANK[b.dataType ?? ""] ?? 2),
-  );
-  let nutrients: ApiNutrient[] = [];
-  let detailFetched = false;
-  for (const candidate of candidates) {
-    const detailUrl = `${FDC_BASE}/food/${candidate.fdcId}?api_key=${apiKey}`;
-    let detailRes: Response;
+  // Step 2: use AI to pick the best-matching product from the candidate list.
+  const candidateList = products
+    .map((p, i) => {
+      const label = [p.product_name, p.brands].filter(Boolean).join(" — ") || "(no name)";
+      return `${i}: ${label} [code: ${p.code}]`;
+    })
+    .join("\n");
+
+  let chosenCode = products[0].code;
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+  if (openrouterKey) {
     try {
-      detailRes = await fetch(detailUrl);
+      const openrouter = createOpenRouter({ apiKey: openrouterKey });
+      const { text } = await generateText({
+        model: openrouter("anthropic/claude-sonnet-4.6"),
+        prompt: `You are selecting the best Open Food Facts product match for a recipe ingredient.
+Ingredient: "${ingredientValue}"
+Candidates (index: name [code]):
+${candidateList}
+Reply with only a JSON object: {"code": "<product_code>"}`,
+      });
+      const match = text.match(/"code"\s*:\s*"([^"]+)"/);
+      if (match) {
+        const picked = match[1];
+        if (products.some((p) => p.code === picked)) {
+          chosenCode = picked;
+        }
+      }
     } catch (err) {
-      throw new NutritionApiError(
-        `USDA food detail request failed: ${err instanceof Error ? err.message : String(err)}`,
+      console.warn(
+        `[nutrition] AI food selection failed for "${ingredientValue}", falling back to first result:`,
+        err instanceof Error ? err.message : err,
       );
     }
-    if (!detailRes.ok) {
-      if (detailRes.status === 404) continue;
-      throw new NutritionApiError(
-        `USDA food detail returned ${detailRes.status}`,
-        detailRes.status,
-      );
-    }
-    const food = (await detailRes.json()) as FoodDetailResponse;
-    nutrients = food.foodNutrients ?? [];
-    detailFetched = true;
-    break;
   }
 
-  if (!detailFetched) {
-    const missing = "missing" as const;
-    return {
-      energy: missing,
-      protein: missing,
-      fat: missing,
-      carbs: missing,
-      fiber: missing,
-      sodium: missing,
-      calcium: missing,
-      iron: missing,
-      vitaminC: missing,
-      vitaminD: missing,
-      zinc: missing,
-      potassium: missing,
-      vitaminB12: missing,
-      folate: missing,
-      magnesium: missing,
-      phosphorus: missing,
-    };
+  // Step 3: extract nutrients from the chosen product.
+  const chosenProduct =
+    products.find((p) => p.code === chosenCode) ?? products[0];
+  const label = [chosenProduct.product_name, chosenProduct.brands].filter(Boolean).join(" — ");
+  console.log(`[nutrition] chosen product: ${label} (${chosenProduct.code})`);
+
+  const raw = extractNutrients(chosenProduct);
+
+  const scale =
+    typeof weightGrams === "number" && weightGrams > 0
+      ? weightGrams / 100
+      : null;
+
+  function scaled(value: NutrientValue): NutrientValue {
+    if (scale === null || value === "missing") return value;
+    return value * scale;
+  }
+
+  // For core macros absent from OFF, fall back to 0 rather than "missing".
+  function scaledMacro(value: NutrientValue): NutrientValue {
+    if (value === "missing") return 0;
+    return scaled(value);
   }
 
   return {
-    energy: resolveNutrient(nutrients, NUTRIENT_IDS.energy),
-    protein: resolveNutrient(nutrients, NUTRIENT_IDS.protein),
-    fat: resolveNutrient(nutrients, NUTRIENT_IDS.fat),
-    carbs: resolveNutrient(nutrients, NUTRIENT_IDS.carbs),
-    fiber: resolveNutrient(nutrients, NUTRIENT_IDS.fiber),
-    sodium: resolveNutrient(nutrients, NUTRIENT_IDS.sodium),
-    calcium: resolveNutrient(nutrients, NUTRIENT_IDS.calcium),
-    iron: resolveNutrient(nutrients, NUTRIENT_IDS.iron),
-    vitaminC: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminC),
-    vitaminD: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminD),
-    zinc: resolveNutrient(nutrients, NUTRIENT_IDS.zinc),
-    potassium: resolveNutrient(nutrients, NUTRIENT_IDS.potassium),
-    vitaminB12: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminB12),
-    folate: resolveNutrient(nutrients, NUTRIENT_IDS.folate),
-    magnesium: resolveNutrient(nutrients, NUTRIENT_IDS.magnesium),
-    phosphorus: resolveNutrient(nutrients, NUTRIENT_IDS.phosphorus),
+    energy:       scaledMacro(raw.energy),
+    protein:      scaledMacro(raw.protein),
+    fat:          scaledMacro(raw.fat),
+    saturatedFat: scaled(raw.saturatedFat),
+    carbs:        scaledMacro(raw.carbs),
+    fiber:        scaled(raw.fiber),
+    sugars:       scaled(raw.sugars),
+    salt:         scaled(raw.salt),
+    sodium:       scaled(raw.sodium),
   };
 }

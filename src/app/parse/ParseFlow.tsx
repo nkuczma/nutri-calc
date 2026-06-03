@@ -15,6 +15,7 @@ export function ParseFlow() {
   const [nutritionDone, setNutritionDone] = useState(false);
   const [nutritionError, setNutritionError] = useState<string | null>(null);
   const [nutrients, setNutrients] = useState<IngredientNutrients | null | undefined>(undefined);
+  const [weightGrams, setWeightGrams] = useState<(number | 'missing' | null)[] | null>(null);
 
   const { object, submit, isLoading, error } = useObject({
     api: '/api/parse-recipe',
@@ -34,6 +35,7 @@ export function ParseFlow() {
     setNutritionDone(false);
     setNutrients(undefined);
     setNutritionError(null);
+    setWeightGrams(null);
     submit({ recipeText: text });
   }
 
@@ -44,10 +46,22 @@ export function ParseFlow() {
     setNutritionDone(true);
 
     try {
-      const res = await fetch('/api/nutrition-summary', {
+      // Step 1: resolve gram weights
+      const normalizeRes = await fetch('/api/normalize-units', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ingredients: rows }),
+      });
+      const normalizeData = await normalizeRes.json();
+      if (!normalizeRes.ok) throw new Error(normalizeData.error ?? 'Unit normalization failed');
+      const weights: (number | 'missing')[] = normalizeData.weights;
+      setWeightGrams(weights);
+
+      // Step 2: fetch nutrition with weights
+      const res = await fetch('/api/nutrition-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients: rows, weights }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Nutrition fetch failed');
@@ -95,6 +109,7 @@ export function ParseFlow() {
           parsed={parsedIngredients}
           onConfirm={handleConfirm}
           disabled={fetchingNutrients}
+          weightGrams={weightGrams}
         />
       )}
 

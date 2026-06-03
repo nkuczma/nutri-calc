@@ -122,6 +122,26 @@ Every authenticated user has access to exactly their own recipes. The role model
 - **Recipe sharing between users:** Recipes are private to their owner — no sharing links, public recipe pages, or collaborative editing.
 - **Mobile apps:** Web-only for v1. No native iOS or Android application.
 
-## Open Questions
+## Nutritional Data Source
 
-1. **Which external nutritional data source will the product use?** — Candidates identified during shaping: Open Food Facts (free, open-source), USDA FoodData Central (free, US government), Edamam (freemium). The choice affects micronutrient coverage breadth, missing-data frequency, and ingredient-matching behavior. Owner: user. By: before tech-stack selection.
+**Source: Open Food Facts** (https://world.openfoodfacts.org) — free, open-source, no API key required.
+
+**Resolved nutrients (all per 100g, scaled to ingredient weight):**
+
+| Field | Unit | Notes |
+|-------|------|-------|
+| energy | kcal | `energy-kcal_100g` |
+| protein | g | `proteins_100g` |
+| fat | g | `fat_100g` |
+| saturated fat | g | `saturated-fat_100g` |
+| carbohydrates | g | `carbohydrates_100g` |
+| fiber | g | `fiber_100g` |
+| sugars | g | `sugars_100g` |
+| salt | g | `salt_100g` |
+| sodium | mg | derived from `sodium_100g` (converted g→mg); falls back to salt/2.5 |
+
+Micronutrients (vitamins, minerals) are **not in scope** — OFF does not provide them reliably enough for use. The data model contains only the nine nutrients above.
+
+**Product matching:** OFF search returns up to 10 candidates. Claude (via OpenRouter) evaluates the list and selects the best match for the ingredient. Falls back to the first result if AI is unavailable.
+
+**Missing-data policy:** Fields absent from a product's OFF entry are shown as "—" (explicit missing), never as 0. Core macros (energy, protein, fat, carbs) that are absent default to 0 per the missing-data invariant.

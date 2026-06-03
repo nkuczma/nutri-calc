@@ -3,7 +3,7 @@ project: NutriCalc
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-05-25
+updated: 2026-06-01
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -33,13 +33,14 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 | ----- | ------------------------ | --------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
 | F-01  | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                 | —                | FR-001, NFR data isolation, Access Control | done     |
 | F-02  | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced          | —                | FR-005, FR-006, Open Q #1, NFR reproducibility | done     |
-| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | ready    |
-| S-01  | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags | F-01, F-02 | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | proposed |
+| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | done     |
+| S-01  | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags | F-01, F-02 | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | done     |
 | S-02  | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary       | F-01, F-02       | FR-004, FR-005, FR-006            | proposed |
 | S-03  | save-recipe              | save a parsed or manually-created recipe to their account                                           | S-01, F-03       | FR-007, NFR data isolation        | proposed |
 | S-04  | list-saved-recipes       | view their saved recipes in chronological order                                                     | S-03             | FR-008, NFR data isolation        | proposed |
 | S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | blocked  |
 | S-06  | delete-saved-recipe      | delete a saved recipe                                                                               | S-04             | FR-010                            | proposed |
+| S-07  | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup | S-01         | FR-003, FR-005                    | proposed |
 
 ## Streams
 
@@ -105,7 +106,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** RLS policies enforce the data-isolation NFR under every code path — a weak policy is a security incident in production. Schema must encode the missing-flag invariant at the column level (e.g., nullable nutrient columns + a `missing_nutrients text[]` column, or a JSONB blob with explicit `null` semantics) so neither the ORM nor the application code can silently default to zero.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -120,7 +121,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Will the AI parse + nutrition lookup combined fit inside the Workers CPU time limit (30 ms paid tier)? `infrastructure.md` pre-mortem calls this out — large JSON deserialization from OpenRouter can push CPU above the cap. Owner: implementer (verify during planning of S-01). Block: no — surfaces during /10x-plan, mitigated by streaming the response.
 - **Risk:** Riskiest slice in the project. Failure of either the AI parse or the nutrition lookup invalidates the primary Success Criterion. Both must hit the < 5 s NFR together. Prompt design (structured output schema for ingredient + quantity + unit) is the load-bearing piece — a hallucinated quantity is worse than a manual entry.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: manual-recipe-entry
 
@@ -183,19 +184,33 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** Table-stakes for user-owned data. The only sequencing concern: cascade rule at the DB level (`recipe_ingredients` rows deleted when parent `recipes` row is deleted) — handled in F-03's schema, not deferred to application code.
 - **Status:** proposed
 
+### S-07: ingredient-unit-handling
+
+- **Outcome:** units on AI-parsed and manually-entered ingredients (e.g. "slice", "cup", "tbsp", "g") are resolved to a quantity in grams (or other base unit the nutrition API accepts) before the nutrition lookup runs; unrecognised units surface as an explicit warning rather than silently passing the raw string through.
+- **Change ID:** ingredient-unit-handling
+- **PRD refs:** FR-003 (structured parse output must include unit), FR-005 (nutrition lookup receives correct quantity)
+- **Prerequisites:** S-01
+- **Parallel with:** S-02 (unit resolution is shared logic; wire into manual entry path at the same time)
+- **Blockers:** —
+- **Unknowns:**
+  - Does USDA FoodData Central accept a `portionCode` / `gramWeight` parameter that can absorb a resolved gram-weight directly, or must the unit normalisation happen entirely client-side? Owner: implementer (check `src/lib/nutrition.ts` + USDA API docs during planning). Block: no.
+- **Risk:** Observed gap during S-01 implementation — units were parsed as strings but never converted, so a "1 slice" ingredient and a "100 g" ingredient both hit the nutrition API with quantity `1`. Silent incorrect totals break the core trust contract more badly than a missing-flag would. Fix must not silently zero: an unresolvable unit must propagate as `"missing"` for that ingredient's nutrients.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                | Suggested issue title                                                       | Ready for `/10x-plan` | Notes                                                                                               |
 | ---------- | ------------------------ | --------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
 | F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                   | done                  | Shipped. PR #10 merged.                                                                             |
 | F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                            | done                  | Shipped. USDA FoodData Central, `src/lib/nutrition.ts`.                                             |
-| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | yes                   | F-01 shipped — run `/10x-plan recipes-schema-rls`. Can run in parallel with S-01/S-02 planning.    |
-| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | yes                   | F-01 + F-02 both shipped. Highest-risk slice; verify CPU-time budget during planning.               |
+| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | done                  | Shipped.                                                                                            |
+| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | done                  | Shipped. PR #13 merged.                                                                             |
 | S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | yes                   | F-01 + F-02 both shipped. Share summary component with S-01.                                        |
-| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | no                    | Waits on S-01 + F-03. Data-isolation regression test required.                                      |
+| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | yes                   | S-01 + F-03 both shipped. Data-isolation regression test required.                                  |
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                          | no                    | Waits on S-03. No search / filter for MVP.                                                          |
 | S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Blocked on Open Roadmap Question #2 (nutrition re-fetch on edit).                                   |
 | S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | no                    | Waits on S-04. Parallel with S-05.                                                                  |
+| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup   | yes                   | S-01 shipped. Wire into S-02 (manual entry) at the same time. Unresolvable unit → `"missing"`, never silent zero. |
 
 ## Open Roadmap Questions
 
@@ -219,4 +234,6 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | ID   | Change ID           | Outcome                                                              | Merged     |
 | ---- | ------------------- | -------------------------------------------------------------------- | ---------- |
 | F-01 | auth-supabase-oauth | OAuth sign-in (Google/GitHub) + session middleware + route guard shipped | 2026-05-29 |
-| F-02 | nutrition-data-source | USDA FoodData Central client — `fetchNutrients`, `number | "missing"` contract | 2026-05-29 |
+| F-02 | nutrition-data-source | USDA FoodData Central client — `fetchNutrients` shipped                              | 2026-05-29 |
+| S-01 | paste-parse-summary   | Paste → AI parse → editable ingredient list → nutritional summary with missing flags | 2026-06-01 |
+| F-03 | recipes-schema-rls    | `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`              | 2026-06-01 |
