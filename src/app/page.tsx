@@ -1,11 +1,11 @@
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return (
@@ -26,21 +26,26 @@ export default async function Home() {
           </a>
         </main>
       </div>
-    )
+    );
   }
 
   const { data: recipes } = await supabase
-    .from('recipes')
-    .select('id, title, created_at')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .from("recipes")
+    .select("id, title, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <main className="mx-auto max-w-xl px-4 py-16">
-        <h1 className="mb-8 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-          My recipes
-        </h1>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+            My recipes
+          </h1>
+          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            {user.email}
+          </span>
+        </div>
 
         <div className="mb-8 flex gap-3">
           <Link
@@ -61,7 +66,7 @@ export default async function Home() {
           <p className="text-sm text-zinc-500">No recipes yet.</p>
         ) : (
           <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
-            {recipes.map(r => (
+            {recipes.map((r) => (
               <li key={r.id}>
                 <Link
                   href={`/recipes/${r.id}`}
@@ -71,10 +76,10 @@ export default async function Home() {
                     {r.title}
                   </span>
                   <span className="text-xs text-zinc-500">
-                    {new Date(r.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
+                    {new Date(r.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
                     })}
                   </span>
                 </Link>
@@ -84,5 +89,5 @@ export default async function Home() {
         )}
       </main>
     </div>
-  )
+  );
 }
