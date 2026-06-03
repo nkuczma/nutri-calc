@@ -105,8 +105,8 @@ The `signOut` import and form can be removed — authenticated users are redirec
 
 #### Automated
 
-- [ ] 1.1 Linting passes: `npm run lint`
-- [ ] 1.2 Build succeeds: `npm run build`
+- [x] 1.1 Linting passes: `npm run lint` — c309ee7
+- [x] 1.2 Build succeeds: `npm run build` — c309ee7
 
 #### Manual
 
