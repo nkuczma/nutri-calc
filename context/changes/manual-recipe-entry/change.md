@@ -1,7 +1,7 @@
 ---
 id: manual-recipe-entry
 title: Manual Recipe Entry (S-02)
-status: implementing
+status: implemented
 created: 2026-06-03
 updated: 2026-06-03
 prd_refs: FR-004, FR-007, FR-008

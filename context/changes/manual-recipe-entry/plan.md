@@ -282,12 +282,12 @@ No schema migrations required. The existing `recipes` and `recipe_ingredients` t
 
 #### Manual
 
-- [ ] 1.3 `/recipes/new` without session redirects to `/sign-in`
-- [ ] 1.4 `/recipes/new` loads with title field and one empty ingredient row
-- [ ] 1.5 Summary shows with "—" for missing nutrients after confirm
-- [ ] 1.6 Save button disabled until title entered
-- [ ] 1.7 Save button disabled before summary fetched
-- [ ] 1.8 Clicking Save (stub) triggers navigation to `/recipes`
+- [x] 1.3 `/recipes/new` without session redirects to `/sign-in`
+- [x] 1.4 `/recipes/new` loads with title field and one empty ingredient row
+- [x] 1.5 Summary shows with "—" for missing nutrients after confirm
+- [x] 1.6 Save button disabled until title entered
+- [x] 1.7 Save button disabled before summary fetched
+- [x] 1.8 Clicking Save (stub) triggers navigation to `/recipes`
 
 ### Phase 2: Nutrition API Extension and Save Server Action
 
@@ -298,24 +298,24 @@ No schema migrations required. The existing `recipes` and `recipe_ingredients` t
 
 #### Manual
 
-- [ ] 2.3 Recipe + ingredients written to Supabase after Save
-- [ ] 2.4 `raw_text` is NULL in DB for manually created recipe
-- [ ] 2.5 Missing-flag invariant: missing nutrient stored as NULL, not 0
-- [ ] 2.6 Unauthenticated POST to `/api/nutrition-summary` returns 401
+- [x] 2.3 Recipe + ingredients written to Supabase after Save
+- [x] 2.4 `raw_text` is NULL in DB for manually created recipe
+- [x] 2.5 Missing-flag invariant: missing nutrient stored as NULL, not 0
+- [x] 2.6 Unauthenticated POST to `/api/nutrition-summary` returns 401
 
 ### Phase 3: Recipe List Page and Navigation
 
 #### Automated
 
-- [x] 3.1 TypeScript build passes: `npm run build`
-- [x] 3.2 ESLint passes: `npm run lint`
+- [x] 3.1 TypeScript build passes: `npm run build` — d1bc71c
+- [x] 3.2 ESLint passes: `npm run lint` — d1bc71c
 
 #### Manual
 
-- [ ] 3.3 Authenticated home shows "My recipes" and "Parse a recipe" links
-- [ ] 3.4 `/recipes` redirects unauthenticated users to `/sign-in`
-- [ ] 3.5 `/recipes` shows "No recipes yet." for fresh account
-- [ ] 3.6 Saved recipe appears in list with title and date
-- [ ] 3.7 Multiple recipes in reverse-chronological order
-- [ ] 3.8 "New recipe" and "Parse with AI" buttons navigate correctly
-- [ ] 3.9 End-to-end flow: home → /recipes → /recipes/new → save → list shows new entry
+- [x] 3.3 Authenticated home shows "My recipes" and "Parse a recipe" links
+- [x] 3.4 `/recipes` redirects unauthenticated users to `/sign-in`
+- [x] 3.5 `/recipes` shows "No recipes yet." for fresh account
+- [x] 3.6 Saved recipe appears in list with title and date
+- [x] 3.7 Multiple recipes in reverse-chronological order
+- [x] 3.8 "New recipe" and "Parse with AI" buttons navigate correctly
+- [x] 3.9 End-to-end flow: home → /recipes → /recipes/new → save → list shows new entry
