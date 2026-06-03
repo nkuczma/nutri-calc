@@ -1,7 +1,7 @@
 ---
 id: delete-saved-recipe
 title: Delete Saved Recipe
-status: implementing
+status: implemented
 created: 2026-06-03
 updated: 2026-06-03
 
