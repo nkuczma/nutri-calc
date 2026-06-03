@@ -83,6 +83,7 @@ export type Database = {
           title: string
           raw_text: string | null
           created_at: string
+          updated_at: string | null
           total_energy: number | null
           total_protein: number | null
           total_fat: number | null
@@ -99,6 +100,7 @@ export type Database = {
           title: string
           raw_text?: string | null
           created_at?: string
+          updated_at?: string | null
           total_energy?: number | null
           total_protein?: number | null
           total_fat?: number | null
@@ -115,6 +117,7 @@ export type Database = {
           title?: string
           raw_text?: string | null
           created_at?: string
+          updated_at?: string | null
           total_energy?: number | null
           total_protein?: number | null
           total_fat?: number | null
@@ -132,7 +135,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      save_recipe: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_raw_text: string | null
+          p_totals: Json
+          p_ingredients: Json
+        }
+        Returns: string
+      }
+      update_recipe: {
+        Args: {
+          p_user_id: string
+          p_recipe_id: string
+          p_title: string
+          p_totals: Json
+          p_ingredients: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

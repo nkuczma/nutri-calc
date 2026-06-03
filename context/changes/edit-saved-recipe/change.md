@@ -1,9 +1,9 @@
 ---
 id: edit-saved-recipe
 title: Edit Saved Recipe
-status: planned
+status: implemented
 created: 2026-06-03
-updated: 2026-06-03
+updated: 2026-06-04
 roadmap_ref: S-05
 prerequisites: S-04 (list-saved-recipes)
 parallel_with: S-06 (delete-saved-recipe)
