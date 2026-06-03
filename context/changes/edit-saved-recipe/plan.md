@@ -77,6 +77,7 @@ SECURITY DEFINER
 ```
 
 Body must:
+
 1. Verify the recipe exists and belongs to `p_user_id` — raise exception if not.
 2. `UPDATE recipes SET title = p_title, <total columns from p_totals>, updated_at = now() WHERE id = p_recipe_id`.
 3. `DELETE FROM recipe_ingredients WHERE recipe_id = p_recipe_id`.
@@ -121,11 +122,12 @@ Add an `updateRecipe` server action that: maps ingredients → grams → nutrien
 export async function updateRecipe(
   recipeId: string,
   title: string,
-  ingredients: Ingredient[]   // {name, quantity, unit} — from IngredientEditor output
-): Promise<{ error?: string }>
+  ingredients: Ingredient[], // {name, quantity, unit} — from IngredientEditor output
+): Promise<{ error?: string }>;
 ```
 
 Body steps:
+
 1. Get `user` from Supabase auth — return `{ error: "Unauthorized" }` if none.
 2. For each ingredient, call `convertToGrams(name, quantity, unit)` — collect `weights: (number | "missing")[]`.
 3. For each ingredient, call `fetchNutrients(name, weightGrams)` where `weightGrams` is the resolved number or `undefined` if `"missing"`. Wrap each in try/catch; on catch, substitute `{ energy: "missing", protein: "missing", ... }` (all fields `"missing"`) — do not throw.
@@ -169,17 +171,17 @@ Extract the read-only recipe detail view into a `RecipeDetailView` Client Compon
 ```ts
 type Props = {
   recipe: {
-    id: string
-    title: string
-    totals: IngredientNutrients   // from recipeRowToTotals()
-  }
+    id: string;
+    title: string;
+    totals: IngredientNutrients; // from recipeRowToTotals()
+  };
   ingredients: Array<{
-    name: string
-    quantity: number
-    unit: string
-    nutrients: IngredientNutrients  // from ingredientRowToNutrients()
-  }>
-}
+    name: string;
+    quantity: number;
+    unit: string;
+    nutrients: IngredientNutrients; // from ingredientRowToNutrients()
+  }>;
+};
 ```
 
 **View mode:** renders the existing read-only ingredient table + `NutritionalSummary` with `recipe.totals` + an **Edit** button.
@@ -275,22 +277,22 @@ type Props = {
 
 #### Manual
 
-- [x] 2.3 Edit a recipe in browser, save, confirm DB rows updated in Supabase Studio
-- [x] 2.4 Edit recipe with unresolvable unit, confirm save succeeds with missing nutrients
+- [x] 2.3 Edit a recipe in browser, save, confirm DB rows updated in Supabase Studio — f694503
+- [x] 2.4 Edit recipe with unresolvable unit, confirm save succeeds with missing nutrients — f694503
 
 ### Phase 3: Edit UI — RecipeDetailView Client Component
 
 #### Automated
 
-- [x] 3.1 TypeScript compiles (npm run build)
-- [x] 3.2 ESLint passes (npm run lint)
+- [x] 3.1 TypeScript compiles (npm run build) — f694503
+- [x] 3.2 ESLint passes (npm run lint) — f694503
 
 #### Manual
 
-- [x] 3.3 /recipes/[id] shows read-only view with Edit button and NutritionalSummary
-- [x] 3.4 Edit mode shows title input, IngredientEditor, Save and Cancel buttons
-- [x] 3.5 Save updates ingredient list and nutritional summary in view mode
-- [x] 3.6 Cancel discards changes without DB writes
-- [x] 3.7 Bad unit save succeeds with missing nutrients for affected ingredient
-- [x] 3.8 Other user's recipe returns 404
-- [x] 3.9 /recipes list page shows no regressions
+- [x] 3.3 /recipes/[id] shows read-only view with Edit button and NutritionalSummary — f694503
+- [x] 3.4 Edit mode shows title input, IngredientEditor, Save and Cancel buttons — f694503
+- [x] 3.5 Save updates ingredient list and nutritional summary in view mode — f694503
+- [x] 3.6 Cancel discards changes without DB writes — f694503
+- [x] 3.7 Bad unit save succeeds with missing nutrients for affected ingredient — f694503
+- [x] 3.8 Other user's recipe returns 404 — f694503
+- [x] 3.9 /recipes list page shows no regressions — f694503
