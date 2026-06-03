@@ -3,7 +3,7 @@ project: NutriCalc
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-06-01
+updated: 2026-06-03
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -38,9 +38,10 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 | S-02  | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary       | F-01, F-02       | FR-004, FR-005, FR-006            | proposed |
 | S-03  | save-recipe              | save a parsed or manually-created recipe to their account                                           | S-01, F-03       | FR-007, NFR data isolation        | proposed |
 | S-04  | list-saved-recipes       | view their saved recipes in chronological order                                                     | S-03             | FR-008, NFR data isolation        | proposed |
-| S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | blocked  |
+| S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | proposed |
 | S-06  | delete-saved-recipe      | delete a saved recipe                                                                               | S-04             | FR-010                            | proposed |
-| S-07  | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup | S-01         | FR-003, FR-005                    | proposed |
+| S-07  | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup | S-01         | FR-003, FR-005                    | done     |
+| S-08  | landing-page             | visit the app unauthenticated and see a landing page explaining what the app does, before being prompted to sign in | —            | —                                 | proposed |
 
 ## Streams
 
@@ -168,9 +169,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** S-06
 - **Blockers:** —
 - **Unknowns:**
-  - When the user edits an ingredient (e.g., changes "salmon" to "tuna"), does the per-ingredient nutritional snapshot re-fetch from F-02's client at view-time, or stay frozen at save-time? PRD NFR reproducibility says "same ingredient list always produces the same result" — that argues for re-fetching on edit so the same final ingredient list always recomputes the same totals. Owner: user. Block: yes.
+  - ~~When the user edits an ingredient (e.g., changes "salmon" to "tuna"), does the per-ingredient nutritional snapshot re-fetch from F-02's client at view-time, or stay frozen at save-time?~~ Resolved: re-fetch from F-02 when the user saves an edit. A frozen snapshot that diverges from the displayed ingredient list violates the trust contract. No re-fetch on view-only load.
 - **Risk:** Edit semantics are scoped down (no AI re-parse), but the nutrition recompute question is load-bearing — get it wrong and the summary drifts from the displayed ingredient list, violating the core trust contract.
-- **Status:** blocked
+- **Status:** proposed
 
 ### S-06: delete-saved-recipe
 
@@ -195,6 +196,18 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Does USDA FoodData Central accept a `portionCode` / `gramWeight` parameter that can absorb a resolved gram-weight directly, or must the unit normalisation happen entirely client-side? Owner: implementer (check `src/lib/nutrition.ts` + USDA API docs during planning). Block: no.
 - **Risk:** Observed gap during S-01 implementation — units were parsed as strings but never converted, so a "1 slice" ingredient and a "100 g" ingredient both hit the nutrition API with quantity `1`. Silent incorrect totals break the core trust contract more badly than a missing-flag would. Fix must not silently zero: an unresolvable unit must propagate as `"missing"` for that ingredient's nutrients.
+- **Status:** done
+
+### S-08: landing-page
+
+- **Outcome:** a visitor who arrives at the app root unauthenticated sees a landing page that explains what NutriCalc does — core value prop, transparent missing-flag differentiator — and a clear call-to-action to sign in. Authenticated users are redirected past it.
+- **Change ID:** landing-page
+- **PRD refs:** —
+- **Prerequisites:** —
+- **Parallel with:** any other slice
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Low — purely presentational, no data dependencies. Main failure mode is letting the current placeholder leak to a real user and undermining trust before they even sign in.
 - **Status:** proposed
 
 ## Backlog Handoff
@@ -208,14 +221,15 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | yes                   | F-01 + F-02 both shipped. Share summary component with S-01.                                        |
 | S-03       | save-recipe              | Save parsed / manual recipe to account                                      | yes                   | S-01 + F-03 both shipped. Data-isolation regression test required.                                  |
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                          | no                    | Waits on S-03. No search / filter for MVP.                                                          |
-| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Blocked on Open Roadmap Question #2 (nutrition re-fetch on edit).                                   |
+| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Waits on S-04. Re-fetch F-02 on edit save (Open Roadmap Q #2 resolved). Parallel with S-06.        |
 | S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | no                    | Waits on S-04. Parallel with S-05.                                                                  |
-| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup   | yes                   | S-01 shipped. Wire into S-02 (manual entry) at the same time. Unresolvable unit → `"missing"`, never silent zero. |
+| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup   | done                  | Shipped. PR #14 merged.                                                                             |
+| S-08       | landing-page             | Marketing/explainer landing page for unauthenticated visitors               | yes                   | No prerequisites. Purely presentational; authenticated users redirect past it.                      |
 
 ## Open Roadmap Questions
 
 1. ~~**Which external nutrition data source will the product use?**~~ — Resolved: USDA FoodData Central. Client shipped in `src/lib/nutrition.ts` (F-02 done).
-2. **On editing a saved recipe ingredient, does the nutritional summary re-fetch nutrition data from F-02 or stay frozen at save-time?** — PRD NFR reproducibility ("same ingredient list always produces the same result") suggests re-fetch at view-time; cached snapshot is faster but violates reproducibility when an ingredient line is changed. Owner: user. Block: S-05.
+2. ~~**On editing a saved recipe ingredient, does the nutritional summary re-fetch nutrition data from F-02 or stay frozen at save-time?**~~ — Resolved: re-fetch from F-02 on every edit save. A frozen snapshot diverges from the displayed ingredient list when the ingredient changes, violating the core trust contract. Rule: when the user saves a name/quantity/unit change, re-run the F-02 lookup for that ingredient, update the stored snapshot, and recompute recipe totals. No re-fetch on view-only load. Unresolvable lookups propagate as `"missing"`. S-05 is now unblocked.
 
 ## Parked
 
@@ -237,3 +251,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | F-02 | nutrition-data-source | USDA FoodData Central client — `fetchNutrients` shipped                              | 2026-05-29 |
 | S-01 | paste-parse-summary   | Paste → AI parse → editable ingredient list → nutritional summary with missing flags | 2026-06-01 |
 | F-03 | recipes-schema-rls    | `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`              | 2026-06-01 |
+| S-07 | ingredient-unit-handling | Unit resolution (slice/cup/tbsp/g → grams) before nutrition lookup; unresolvable → `"missing"` | 2026-06-03 |
