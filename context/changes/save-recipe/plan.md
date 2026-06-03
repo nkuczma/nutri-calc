@@ -235,27 +235,27 @@ Apply with `npx supabase db push` (requires linked project) or paste into Supaba
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db push`
-- [x] 1.2 TypeScript compiles: `npm run build`
-- [x] 1.3 ESLint passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly: `npx supabase db push` — 1b5ee2a
+- [x] 1.2 TypeScript compiles: `npm run build` — 1b5ee2a
+- [x] 1.3 ESLint passes: `npm run lint` — 1b5ee2a
 
 #### Manual
 
-- [ ] 1.4 Save from `/recipes/new` still works and writes correct rows to Supabase
-- [ ] 1.5 Missing nutrients stored as NULL not 0
-- [ ] 1.6 `raw_text` is NULL in DB
+- [x] 1.4 Save from `/recipes/new` still works and writes correct rows to Supabase
+- [x] 1.5 Missing nutrients stored as NULL not 0
+- [x] 1.6 `raw_text` is NULL in DB
 
 ### Phase 2: Save Button in ParseFlow
 
 #### Automated
 
-- [x] 2.1 TypeScript compiles: `npm run build`
-- [x] 2.2 ESLint passes: `npm run lint`
+- [x] 2.1 TypeScript compiles: `npm run build` — 201d2e2
+- [x] 2.2 ESLint passes: `npm run lint` — 201d2e2
 
 #### Manual
 
-- [ ] 2.3 Title input and Save button appear below summary after parse
-- [ ] 2.4 Save button disabled until title entered
-- [ ] 2.5 Save redirects to `/recipes` and entry appears in list
-- [ ] 2.6 Re-parsing clears title and save state
-- [ ] 2.7 ManualEntryFlow save is unaffected
+- [x] 2.3 Title input and Save button appear below summary after parse
+- [x] 2.4 Save button disabled until title entered
+- [x] 2.5 Save redirects to `/recipes` and entry appears in list
+- [x] 2.6 Re-parsing clears title and save state
+- [x] 2.7 ManualEntryFlow save is unaffected

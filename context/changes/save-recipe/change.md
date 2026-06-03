@@ -1,7 +1,7 @@
 ---
 id: save-recipe
 title: Save Recipe (FR-007)
-status: implementing
+status: implemented
 created: 2026-06-03
 updated: 2026-06-03
 prd_refs: FR-007
