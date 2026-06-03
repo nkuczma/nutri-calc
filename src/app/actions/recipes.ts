@@ -1,5 +1,6 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { nutrientsToIngredientColumns, totalsToRecipeColumns } from '@/lib/db/recipes';
 import type { Ingredient } from '@/lib/schemas/ingredient';
@@ -34,4 +35,20 @@ export async function saveRecipe(
   if (rpcError) return { error: rpcError.message };
 
   return {};
+}
+
+export async function deleteRecipe(id: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const { error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) return { error: error.message };
+
+  redirect('/recipes');
 }

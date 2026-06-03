@@ -136,7 +136,7 @@ Add a `DeleteRecipeButton` Client Component that shows a `confirm()` dialog and 
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run lint`
 
 #### Manual
 
