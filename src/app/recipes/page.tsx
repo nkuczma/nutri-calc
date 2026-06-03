@@ -43,15 +43,20 @@ export default async function RecipesPage() {
         ) : (
           <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
             {recipes.map(r => (
-              <li key={r.id} className="flex items-center justify-between py-3">
-                <span className="text-sm text-zinc-900 dark:text-zinc-100">{r.title}</span>
-                <span className="text-xs text-zinc-500">
-                  {new Date(r.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
+              <li key={r.id}>
+                <Link
+                  href={`/recipes/${r.id}`}
+                  className="flex items-center justify-between py-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 -mx-2 px-2 rounded"
+                >
+                  <span className="text-sm text-zinc-900 dark:text-zinc-100">{r.title}</span>
+                  <span className="text-xs text-zinc-500">
+                    {new Date(r.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
