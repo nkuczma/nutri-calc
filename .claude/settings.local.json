@@ -22,7 +22,8 @@
       "mcp__exa__web_fetch_exa",
       "mcp__exa__web_search_exa",
       "Bash(ls /mnt/c/Users/NataliaKuczma/Desktop/10xdevs/context/changes/)",
-      "Bash(tasklist /FI \"IMAGENAME eq node.exe\")"
+      "Bash(tasklist /FI \"IMAGENAME eq node.exe\")",
+      "Bash(python -m json.tool)"
     ],
     "deny": [
       "Bash(rm -rf *)"

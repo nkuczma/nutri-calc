@@ -1,22 +1,15 @@
 import type { IngredientNutrients } from '@/lib/nutrition';
 
 const NUTRIENTS: Array<{ key: keyof IngredientNutrients; label: string; unit: string }> = [
-  { key: 'energy',      label: 'Energy',       unit: 'kcal' },
-  { key: 'protein',     label: 'Protein',       unit: 'g'    },
-  { key: 'fat',         label: 'Fat',           unit: 'g'    },
-  { key: 'carbs',       label: 'Carbohydrates', unit: 'g'    },
-  { key: 'fiber',       label: 'Fiber',         unit: 'g'    },
-  { key: 'sodium',      label: 'Sodium',        unit: 'mg'   },
-  { key: 'calcium',     label: 'Calcium',       unit: 'mg'   },
-  { key: 'iron',        label: 'Iron',          unit: 'mg'   },
-  { key: 'vitaminC',    label: 'Vitamin C',     unit: 'mg'   },
-  { key: 'vitaminD',    label: 'Vitamin D',     unit: 'µg'   },
-  { key: 'zinc',        label: 'Zinc',          unit: 'mg'   },
-  { key: 'potassium',   label: 'Potassium',     unit: 'mg'   },
-  { key: 'vitaminB12',  label: 'Vitamin B12',   unit: 'µg'   },
-  { key: 'folate',      label: 'Folate',        unit: 'µg'   },
-  { key: 'magnesium',   label: 'Magnesium',     unit: 'mg'   },
-  { key: 'phosphorus',  label: 'Phosphorus',    unit: 'mg'   },
+  { key: 'energy',       label: 'Energy',          unit: 'kcal' },
+  { key: 'protein',      label: 'Protein',         unit: 'g'    },
+  { key: 'fat',          label: 'Fat',             unit: 'g'    },
+  { key: 'saturatedFat', label: 'Saturated Fat',   unit: 'g'    },
+  { key: 'carbs',        label: 'Carbohydrates',   unit: 'g'    },
+  { key: 'fiber',        label: 'Fiber',           unit: 'g'    },
+  { key: 'sugars',       label: 'Sugars',          unit: 'g'    },
+  { key: 'salt',         label: 'Salt',            unit: 'g'    },
+  { key: 'sodium',       label: 'Sodium',          unit: 'mg'   },
 ];
 
 interface Props {
