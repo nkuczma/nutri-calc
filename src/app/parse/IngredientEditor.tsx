@@ -7,9 +7,10 @@ interface Props {
   parsed: Ingredient[];
   onConfirm: (rows: Ingredient[]) => void;
   disabled: boolean;
+  weightGrams?: (number | 'missing' | null)[] | null;
 }
 
-export function IngredientEditor({ parsed, onConfirm, disabled }: Props) {
+export function IngredientEditor({ parsed, onConfirm, disabled, weightGrams }: Props) {
   const [rows, setRows] = useState<Ingredient[]>(parsed);
 
   const update = (i: number, field: keyof Ingredient, value: string | number) =>
@@ -35,6 +36,7 @@ export function IngredientEditor({ parsed, onConfirm, disabled }: Props) {
             <th className="pb-2 text-left font-medium text-zinc-600 dark:text-zinc-400">Ingredient</th>
             <th className="pb-2 text-left font-medium text-zinc-600 dark:text-zinc-400 w-20">Qty</th>
             <th className="pb-2 text-left font-medium text-zinc-600 dark:text-zinc-400 w-20">Unit</th>
+            <th className="pb-2 text-left font-medium text-zinc-600 dark:text-zinc-400 w-24">Weight (g)</th>
             <th className="pb-2 w-8" />
           </tr>
         </thead>
@@ -63,6 +65,15 @@ export function IngredientEditor({ parsed, onConfirm, disabled }: Props) {
                   onChange={e => update(i, 'unit', e.target.value)}
                   className="w-full rounded border border-zinc-200 px-2 py-1 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 />
+              </td>
+              <td className="py-1.5 pr-2 text-sm text-zinc-500 dark:text-zinc-400">
+                {weightGrams == null
+                  ? null
+                  : weightGrams[i] === 'missing'
+                    ? '?'
+                    : typeof weightGrams[i] === 'number'
+                      ? (weightGrams[i] as number).toFixed(1)
+                      : null}
               </td>
               <td className="py-1.5 text-center">
                 <button

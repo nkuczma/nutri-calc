@@ -35,6 +35,7 @@ export function ingredientRowToNutrients(row: IngredientRow): IngredientNutrient
     fat:        nullToMissing(row.fat),
     carbs:      nullToMissing(row.carbs),
     fiber:      nullToMissing(row.fiber),
+    sugars:     "missing", // no DB column yet
     sodium:     nullToMissing(row.sodium),
     calcium:    nullToMissing(row.calcium),
     iron:       nullToMissing(row.iron),
@@ -77,6 +78,7 @@ export function recipeRowToTotals(row: RecipeRow): IngredientNutrients {
     fat:        nullToMissing(row.total_fat),
     carbs:      nullToMissing(row.total_carbs),
     fiber:      nullToMissing(row.total_fiber),
+    sugars:     "missing", // no DB column yet
     sodium:     nullToMissing(row.total_sodium),
     calcium:    nullToMissing(row.total_calcium),
     iron:       nullToMissing(row.total_iron),

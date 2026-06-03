@@ -20,7 +20,9 @@
       "Bash(gh issue create --title '[S-04] List saved recipes chronologically' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)",
       "Bash(gh issue create --title '[S-06] Delete a saved recipe \\(cascade delete ingredients\\)' --label slice --label 'status: proposed' --milestone 'NutriCalc MVP' --body ' *)",
       "mcp__exa__web_fetch_exa",
-      "mcp__exa__web_search_exa"
+      "mcp__exa__web_search_exa",
+      "Bash(ls /mnt/c/Users/NataliaKuczma/Desktop/10xdevs/context/changes/)",
+      "Bash(tasklist /FI \"IMAGENAME eq node.exe\")"
     ],
     "deny": [
       "Bash(rm -rf *)"

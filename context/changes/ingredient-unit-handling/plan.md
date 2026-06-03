@@ -285,8 +285,8 @@ Normalization and nutrition-summary are sequential (normalize → then fetch), a
 
 #### Automated
 
-- [x] 3.1 TypeScript compilation passes: `npm run build`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 TypeScript compilation passes: `npm run build` — de1c0a6
+- [x] 3.2 Linting passes: `npm run lint` — de1c0a6
 
 #### Manual
 
@@ -297,12 +297,12 @@ Normalization and nutrition-summary are sequential (normalize → then fetch), a
 
 #### Automated
 
-- [ ] 4.1 TypeScript compilation passes: `npm run build`
-- [ ] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 TypeScript compilation passes: `npm run build`
+- [x] 4.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.3 Weight (g) column fills in after clicking "Get nutritional summary"
-- [ ] 4.4 Ingredient with unmatchable unit shows "?" and flow continues
-- [ ] 4.5 Nutrition totals are visibly weight-scaled (flour ≈ 874 kcal for 2 cups)
-- [ ] 4.6 No regressions in end-to-end parse flow
+- [x] 4.3 Weight (g) column fills in after clicking "Get nutritional summary"
+- [x] 4.4 Ingredient with unmatchable unit shows "?" and flow continues
+- [x] 4.5 Nutrition totals are visibly weight-scaled (flour ≈ 874 kcal for 2 cups)
+- [x] 4.6 No regressions in end-to-end parse flow
