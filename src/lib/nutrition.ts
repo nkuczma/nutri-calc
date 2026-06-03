@@ -80,6 +80,7 @@ const FDC_BASE = "https://api.nal.usda.gov/fdc/v1";
 
 export async function fetchNutrients(
   ingredientValue: string,
+  weightGrams?: number,
 ): Promise<IngredientNutrients> {
   const apiKey = process.env.NUTRITION_API_KEY;
   if (!apiKey) {
@@ -185,22 +186,32 @@ export async function fetchNutrients(
     };
   }
 
+  const scale =
+    typeof weightGrams === "number" && weightGrams > 0
+      ? weightGrams / 100
+      : null;
+
+  function scaled(value: NutrientValue): NutrientValue {
+    if (scale === null || value === "missing") return value;
+    return value * scale;
+  }
+
   return {
-    energy: resolveNutrient(nutrients, NUTRIENT_IDS.energy),
-    protein: resolveNutrient(nutrients, NUTRIENT_IDS.protein),
-    fat: resolveNutrient(nutrients, NUTRIENT_IDS.fat),
-    carbs: resolveNutrient(nutrients, NUTRIENT_IDS.carbs),
-    fiber: resolveNutrient(nutrients, NUTRIENT_IDS.fiber),
-    sodium: resolveNutrient(nutrients, NUTRIENT_IDS.sodium),
-    calcium: resolveNutrient(nutrients, NUTRIENT_IDS.calcium),
-    iron: resolveNutrient(nutrients, NUTRIENT_IDS.iron),
-    vitaminC: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminC),
-    vitaminD: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminD),
-    zinc: resolveNutrient(nutrients, NUTRIENT_IDS.zinc),
-    potassium: resolveNutrient(nutrients, NUTRIENT_IDS.potassium),
-    vitaminB12: resolveNutrient(nutrients, NUTRIENT_IDS.vitaminB12),
-    folate: resolveNutrient(nutrients, NUTRIENT_IDS.folate),
-    magnesium: resolveNutrient(nutrients, NUTRIENT_IDS.magnesium),
-    phosphorus: resolveNutrient(nutrients, NUTRIENT_IDS.phosphorus),
+    energy: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.energy)),
+    protein: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.protein)),
+    fat: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.fat)),
+    carbs: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.carbs)),
+    fiber: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.fiber)),
+    sodium: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.sodium)),
+    calcium: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.calcium)),
+    iron: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.iron)),
+    vitaminC: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.vitaminC)),
+    vitaminD: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.vitaminD)),
+    zinc: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.zinc)),
+    potassium: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.potassium)),
+    vitaminB12: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.vitaminB12)),
+    folate: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.folate)),
+    magnesium: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.magnesium)),
+    phosphorus: scaled(resolveNutrient(nutrients, NUTRIENT_IDS.phosphorus)),
   };
 }

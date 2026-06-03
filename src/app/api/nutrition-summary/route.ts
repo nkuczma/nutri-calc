@@ -14,18 +14,24 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ingredients }: { ingredients: Ingredient[] } = await req.json();
+  const {
+    ingredients,
+    weights,
+  }: { ingredients: Ingredient[]; weights?: (number | "missing")[] } =
+    await req.json();
 
   if (ingredients.length === 0) {
     return Response.json({ nutrients: null });
   }
 
-  const query = (i: Ingredient) => `${i.name} ${i.quantity} ${i.unit}`;
-
   let results: IngredientNutrients[];
   try {
     results = await Promise.all(
-      ingredients.map((i) => fetchNutrients(query(i))),
+      ingredients.map((i, idx) => {
+        const w = weights?.[idx];
+        const weightGrams = typeof w === "number" ? w : undefined;
+        return fetchNutrients(i.name, weightGrams);
+      }),
     );
   } catch (err) {
     const message =
