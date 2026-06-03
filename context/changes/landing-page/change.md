@@ -1,7 +1,7 @@
 ---
 id: landing-page
 title: Landing Page
-status: planned
+status: implementing
 created: 2026-06-03
 updated: 2026-06-03
 ---
