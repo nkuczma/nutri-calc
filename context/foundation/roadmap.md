@@ -29,29 +29,29 @@ Why this slice is the first end-to-end proof: it hits the primary Success Criter
 
 ## At a glance
 
-| ID    | Change ID                | Outcome (user can …)                                                                                | Prerequisites    | PRD refs                          | Status   |
-| ----- | ------------------------ | --------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------- | -------- |
-| F-01  | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                 | —                | FR-001, NFR data isolation, Access Control | done     |
-| F-02  | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced          | —                | FR-005, FR-006, Open Q #1, NFR reproducibility | done     |
-| F-03  | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                | F-01             | FR-007, NFR data isolation        | done     |
-| S-01  | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags | F-01, F-02 | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | done     |
-| S-02  | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary       | F-01, F-02       | FR-004, FR-005, FR-006            | done     |
-| S-03  | save-recipe              | save a parsed or manually-created recipe to their account                                           | S-01, F-03       | FR-007, NFR data isolation        | done     |
-| S-04  | list-saved-recipes       | view their saved recipes in chronological order                                                     | S-03             | FR-008, NFR data isolation        | done     |
-| S-05  | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                     | S-04             | FR-009                            | proposed |
-| S-06  | delete-saved-recipe      | delete a saved recipe                                                                               | S-04             | FR-010                            | proposed |
-| S-07  | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup | S-01         | FR-003, FR-005                    | done     |
-| S-08  | landing-page             | visit the app unauthenticated and see a landing page explaining what the app does, before being prompted to sign in | —            | —                                 | proposed |
+| ID   | Change ID                | Outcome (user can …)                                                                                                | Prerequisites | PRD refs                                                 | Status   |
+| ---- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------- | -------- |
+| F-01 | auth-supabase-oauth      | (foundation) OAuth sign-in landed; session + route protection wired                                                 | —             | FR-001, NFR data isolation, Access Control               | done     |
+| F-02 | nutrition-data-source    | (foundation) nutrition data source chosen and client wired; missing-flag contract enforced                          | —             | FR-005, FR-006, Open Q #1, NFR reproducibility           | done     |
+| F-03 | recipes-schema-rls       | (foundation) `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                                | F-01          | FR-007, NFR data isolation                               | done     |
+| S-01 | paste-parse-summary      | paste recipe text, get AI-parsed editable ingredient list, see full nutritional summary with missing flags          | F-01, F-02    | US-01, FR-002, FR-003, FR-005, FR-006, NFR response time | done     |
+| S-02 | manual-recipe-entry      | create a recipe from scratch by entering ingredients manually and see its nutritional summary                       | F-01, F-02    | FR-004, FR-005, FR-006                                   | done     |
+| S-03 | save-recipe              | save a parsed or manually-created recipe to their account                                                           | S-01, F-03    | FR-007, NFR data isolation                               | done     |
+| S-04 | list-saved-recipes       | view their saved recipes in chronological order                                                                     | S-03          | FR-008, NFR data isolation                               | done     |
+| S-05 | edit-saved-recipe        | edit the ingredient list of a saved recipe (direct field edits, no AI re-parse)                                     | S-04          | FR-009                                                   | proposed |
+| S-06 | delete-saved-recipe      | delete a saved recipe                                                                                               | S-04          | FR-010                                                   | done     |
+| S-07 | ingredient-unit-handling | AI-parsed and manually-entered ingredients resolve units (e.g. "slice", "cup") before nutrition lookup              | S-01          | FR-003, FR-005                                           | done     |
+| S-08 | landing-page             | visit the app unauthenticated and see a landing page explaining what the app does, before being prompted to sign in | —             | —                                                        | done     |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme                  | Chain                                  | Note                                                                                              |
-| ------ | ---------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| A      | Gated AI loop          | `F-01` → `S-01` → `S-02`               | Critical path under `main_goal: speed`. F-01 unblocks every signed-in slice; S-01 is the north star; S-02 is the fallback creation path. |
-| B      | Nutrition pipeline     | `F-02`                                 | Standalone foundation. Joins Stream A at `S-01` and `S-02`. Blocked on Open Q #1 (nutrition source). |
-| C      | Recipe lifecycle       | `F-03` → `S-03` → `S-04` → `S-05` / `S-06` | Persistence + management. `S-05` and `S-06` run in parallel after `S-04`. Joins Stream A at `S-03` (recipe payload comes from S-01 / S-02). |
+| Stream | Theme              | Chain                                      | Note                                                                                                                                        |
+| ------ | ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | Gated AI loop      | `F-01` → `S-01` → `S-02`                   | Critical path under `main_goal: speed`. F-01 unblocks every signed-in slice; S-01 is the north star; S-02 is the fallback creation path.    |
+| B      | Nutrition pipeline | `F-02`                                     | Standalone foundation. Joins Stream A at `S-01` and `S-02`. Blocked on Open Q #1 (nutrition source).                                        |
+| C      | Recipe lifecycle   | `F-03` → `S-03` → `S-04` → `S-05` / `S-06` | Persistence + management. `S-05` and `S-06` run in parallel after `S-04`. Joins Stream A at `S-03` (recipe payload comes from S-01 / S-02). |
 
 ## Baseline
 
@@ -183,7 +183,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Table-stakes for user-owned data. The only sequencing concern: cascade rule at the DB level (`recipe_ingredients` rows deleted when parent `recipes` row is deleted) — handled in F-03's schema, not deferred to application code.
-- **Status:** proposed
+- **Status:** done
 
 ### S-07: ingredient-unit-handling
 
@@ -208,23 +208,23 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Low — purely presentational, no data dependencies. Main failure mode is letting the current placeholder leak to a real user and undermining trust before they even sign in.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                | Suggested issue title                                                       | Ready for `/10x-plan` | Notes                                                                                               |
-| ---------- | ------------------------ | --------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                   | done                  | Shipped. PR #10 merged.                                                                             |
-| F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                            | done                  | Shipped. USDA FoodData Central, `src/lib/nutrition.ts`.                                             |
-| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | done                  | Shipped.                                                                                            |
-| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | done                  | Shipped. PR #13 merged.                                                                             |
-| S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | done                  | Shipped. PR merged.                                                                                 |
-| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | done                  | Shipped. Atomic RPC + Save button on both Manual and AI parse flows.                                |
-| S-04       | list-saved-recipes       | List saved recipes chronologically                                          | done                  | Shipped as part of manual-recipe-entry.                                                             |
-| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | ready to 10x-plan     | S-04 shipped. Re-fetch F-02 on edit save (Open Roadmap Q #2 resolved). Parallel with S-06.         |
-| S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | ready to 10x-plan     | S-04 shipped. Cascade delete handled by existing FK in F-03 schema. Parallel with S-05.            |
-| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup   | done                  | Shipped. PR #14 merged.                                                                             |
-| S-08       | landing-page             | Marketing/explainer landing page for unauthenticated visitors               | yes                   | No prerequisites. Purely presentational; authenticated users redirect past it.                      |
+| Roadmap ID | Change ID                | Suggested issue title                                                    | Ready for `/10x-plan` | Notes                                                                                      |
+| ---------- | ------------------------ | ------------------------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------ |
+| F-01       | auth-supabase-oauth      | Wire Supabase OAuth (Google / GitHub) for Workers runtime                | done                  | Shipped. PR #10 merged.                                                                    |
+| F-02       | nutrition-data-source    | Choose nutrition data source and wire the client                         | done                  | Shipped. USDA FoodData Central, `src/lib/nutrition.ts`.                                    |
+| F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                  | done                  | Shipped.                                                                                   |
+| S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags   | done                  | Shipped. PR #13 merged.                                                                    |
+| S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                     | done                  | Shipped. PR merged.                                                                        |
+| S-03       | save-recipe              | Save parsed / manual recipe to account                                   | done                  | Shipped. Atomic RPC + Save button on both Manual and AI parse flows.                       |
+| S-04       | list-saved-recipes       | List saved recipes chronologically                                       | done                  | Shipped as part of manual-recipe-entry.                                                    |
+| S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                | ready to 10x-plan     | S-04 shipped. Re-fetch F-02 on edit save (Open Roadmap Q #2 resolved). Parallel with S-06. |
+| S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                | done                  | Shipped.                                                                                    |
+| S-07       | ingredient-unit-handling | Resolve ingredient units (slice, cup, tbsp, g …) before nutrition lookup | done                  | Shipped. PR #14 merged.                                                                    |
+| S-08       | landing-page             | Marketing/explainer landing page for unauthenticated visitors            | done                  | Shipped. No prerequisites. Purely presentational; authenticated users redirect past it.    |
 
 ## Open Roadmap Questions
 
@@ -245,14 +245,16 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Done
 
-| ID   | Change ID           | Outcome                                                              | Merged     |
-| ---- | ------------------- | -------------------------------------------------------------------- | ---------- |
-| F-01 | auth-supabase-oauth | OAuth sign-in (Google/GitHub) + session middleware + route guard shipped | 2026-05-29 |
-| F-02 | nutrition-data-source | USDA FoodData Central client — `fetchNutrients` shipped                              | 2026-05-29 |
-| S-01 | paste-parse-summary   | Paste → AI parse → editable ingredient list → nutritional summary with missing flags | 2026-06-01 |
-| F-03 | recipes-schema-rls    | `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`              | 2026-06-01 |
+| ID   | Change ID                | Outcome                                                                                        | Merged     |
+| ---- | ------------------------ | ---------------------------------------------------------------------------------------------- | ---------- |
+| F-01 | auth-supabase-oauth      | OAuth sign-in (Google/GitHub) + session middleware + route guard shipped                       | 2026-05-29 |
+| F-02 | nutrition-data-source    | USDA FoodData Central client — `fetchNutrients` shipped                                        | 2026-05-29 |
+| S-01 | paste-parse-summary      | Paste → AI parse → editable ingredient list → nutritional summary with missing flags           | 2026-06-01 |
+| F-03 | recipes-schema-rls       | `recipes` + `recipe_ingredients` tables with RLS gating by `auth.uid()`                        | 2026-06-01 |
 | S-07 | ingredient-unit-handling | Unit resolution (slice/cup/tbsp/g → grams) before nutrition lookup; unresolvable → `"missing"` | 2026-06-03 |
-| S-02 | manual-recipe-entry      | Manual entry `/recipes/new`, save to Supabase, `/recipes` list — FR-004, FR-007, FR-008         | 2026-06-03 |
-| S-03 | save-recipe              | Shipped as part of manual-recipe-entry                                                           | 2026-06-03 |
-| S-04 | list-saved-recipes       | Shipped as part of manual-recipe-entry                                                           | 2026-06-03 |
-| S-03 | save-recipe              | Atomic RPC save + Save button on AI parse and manual entry flows                                 | 2026-06-03 |
+| S-02 | manual-recipe-entry      | Manual entry `/recipes/new`, save to Supabase, `/recipes` list — FR-004, FR-007, FR-008        | 2026-06-03 |
+| S-03 | save-recipe              | Shipped as part of manual-recipe-entry                                                         | 2026-06-03 |
+| S-04 | list-saved-recipes       | Shipped as part of manual-recipe-entry                                                         | 2026-06-03 |
+| S-03 | save-recipe              | Atomic RPC save + Save button on AI parse and manual entry flows                               | 2026-06-03 |
+| S-06 | delete-saved-recipe      | Delete a saved recipe; cascade to `recipe_ingredients` via FK in F-03 schema                   | 2026-06-03 |
+| S-08 | landing-page             | Unauthenticated landing page with value prop + sign-in CTA; authenticated users redirected     | 2026-06-03 |
