@@ -1,7 +1,7 @@
 ---
 id: ingredient-unit-handling
 title: Ingredient Unit Normalization & Weight-Based Nutrition
-status: implementing
+status: implemented
 updated: 2026-06-03
 ---
 
