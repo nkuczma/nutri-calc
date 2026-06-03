@@ -259,8 +259,8 @@ Normalization and nutrition-summary are sequential (normalize → then fetch), a
 
 #### Automated
 
-- [x] 1.1 TypeScript compilation passes: `npm run build`
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 TypeScript compilation passes: `npm run build` — 34206dd
+- [x] 1.2 Linting passes: `npm run lint` — 34206dd
 
 #### Manual
 
@@ -273,8 +273,8 @@ Normalization and nutrition-summary are sequential (normalize → then fetch), a
 
 #### Automated
 
-- [ ] 2.1 TypeScript compilation passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 TypeScript compilation passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
