@@ -270,27 +270,27 @@ type Props = {
 
 #### Automated
 
-- [x] 2.1 TypeScript compiles without errors (npm run build)
-- [x] 2.2 ESLint passes (npm run lint)
+- [x] 2.1 TypeScript compiles without errors (npm run build) — 5505611
+- [x] 2.2 ESLint passes (npm run lint) — 5505611
 
 #### Manual
 
-- [ ] 2.3 Edit a recipe in browser, save, confirm DB rows updated in Supabase Studio
-- [ ] 2.4 Edit recipe with unresolvable unit, confirm save succeeds with missing nutrients
+- [x] 2.3 Edit a recipe in browser, save, confirm DB rows updated in Supabase Studio
+- [x] 2.4 Edit recipe with unresolvable unit, confirm save succeeds with missing nutrients
 
 ### Phase 3: Edit UI — RecipeDetailView Client Component
 
 #### Automated
 
-- [ ] 3.1 TypeScript compiles (npm run build)
-- [ ] 3.2 ESLint passes (npm run lint)
+- [x] 3.1 TypeScript compiles (npm run build)
+- [x] 3.2 ESLint passes (npm run lint)
 
 #### Manual
 
-- [ ] 3.3 /recipes/[id] shows read-only view with Edit button and NutritionalSummary
-- [ ] 3.4 Edit mode shows title input, IngredientEditor, Save and Cancel buttons
-- [ ] 3.5 Save updates ingredient list and nutritional summary in view mode
-- [ ] 3.6 Cancel discards changes without DB writes
-- [ ] 3.7 Bad unit save succeeds with missing nutrients for affected ingredient
-- [ ] 3.8 Other user's recipe returns 404
-- [ ] 3.9 /recipes list page shows no regressions
+- [x] 3.3 /recipes/[id] shows read-only view with Edit button and NutritionalSummary
+- [x] 3.4 Edit mode shows title input, IngredientEditor, Save and Cancel buttons
+- [x] 3.5 Save updates ingredient list and nutritional summary in view mode
+- [x] 3.6 Cancel discards changes without DB writes
+- [x] 3.7 Bad unit save succeeds with missing nutrients for affected ingredient
+- [x] 3.8 Other user's recipe returns 404
+- [x] 3.9 /recipes list page shows no regressions
