@@ -257,21 +257,21 @@ type Props = {
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly (supabase db push / migration up)
-- [x] 1.2 update_recipe with valid owned recipe updates rows correctly
-- [x] 1.3 update_recipe with unowned recipe raises exception
+- [x] 1.1 Migration applies cleanly (supabase db push / migration up) — 567c4a2
+- [x] 1.2 update_recipe with valid owned recipe updates rows correctly — 567c4a2
+- [x] 1.3 update_recipe with unowned recipe raises exception — 567c4a2
 
 #### Manual
 
-- [x] 1.4 Function visible in Supabase Studio under public functions
-- [x] 1.5 SQL editor test: update a recipe, confirm recipe_ingredients rows replaced
+- [x] 1.4 Function visible in Supabase Studio under public functions — 567c4a2
+- [x] 1.5 SQL editor test: update a recipe, confirm recipe_ingredients rows replaced — 567c4a2
 
 ### Phase 2: Server Action — updateRecipe
 
 #### Automated
 
-- [ ] 2.1 TypeScript compiles without errors (npm run build)
-- [ ] 2.2 ESLint passes (npm run lint)
+- [x] 2.1 TypeScript compiles without errors (npm run build)
+- [x] 2.2 ESLint passes (npm run lint)
 
 #### Manual
 
