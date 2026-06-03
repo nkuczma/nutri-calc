@@ -277,8 +277,8 @@ No schema migrations required. The existing `recipes` and `recipe_ingredients` t
 
 #### Automated
 
-- [x] 1.1 TypeScript build passes: `npm run build`
-- [x] 1.2 ESLint passes: `npm run lint`
+- [x] 1.1 TypeScript build passes: `npm run build` — cc36212
+- [x] 1.2 ESLint passes: `npm run lint` — cc36212
 
 #### Manual
 
@@ -293,8 +293,8 @@ No schema migrations required. The existing `recipes` and `recipe_ingredients` t
 
 #### Automated
 
-- [ ] 2.1 TypeScript build passes: `npm run build`
-- [ ] 2.2 ESLint passes: `npm run lint`
+- [x] 2.1 TypeScript build passes: `npm run build`
+- [x] 2.2 ESLint passes: `npm run lint`
 
 #### Manual
 
