@@ -136,7 +136,7 @@ Add a `DeleteRecipeButton` Client Component that shows a `confirm()` dialog and 
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run lint` — f19406a
 
 #### Manual
 
@@ -147,8 +147,8 @@ Add a `DeleteRecipeButton` Client Component that shows a `confirm()` dialog and 
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run lint`
-- [ ] 2.2 No TypeScript errors: `npx tsc --noEmit`
+- [x] 2.1 Type checking passes: `npm run lint` — 2adab91
+- [x] 2.2 No TypeScript errors: `npx tsc --noEmit` — 2adab91
 
 #### Manual
 
