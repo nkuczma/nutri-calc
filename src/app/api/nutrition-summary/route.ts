@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     await req.json();
 
   if (ingredients.length === 0) {
-    return Response.json({ nutrients: null });
+    return Response.json({ nutrients: null, perIngredient: [] });
   }
 
   let results: IngredientNutrients[];
@@ -50,5 +50,5 @@ export async function POST(req: Request) {
     }),
   ) as unknown as IngredientNutrients;
 
-  return Response.json({ nutrients: aggregated });
+  return Response.json({ nutrients: aggregated, perIngredient: results });
 }

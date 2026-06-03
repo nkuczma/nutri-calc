@@ -23,7 +23,9 @@
       "mcp__exa__web_search_exa",
       "Bash(ls /mnt/c/Users/NataliaKuczma/Desktop/10xdevs/context/changes/)",
       "Bash(tasklist /FI \"IMAGENAME eq node.exe\")",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(Set-Clipboard \"/10x-implement manual-recipe-entry phase 1\")",
+      "Bash(gh issue *)"
     ],
     "deny": [
       "Bash(rm -rf *)"
