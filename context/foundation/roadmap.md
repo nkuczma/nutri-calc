@@ -219,7 +219,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | F-03       | recipes-schema-rls       | Design `recipes` + `recipe_ingredients` schema with RLS                     | done                  | Shipped.                                                                                            |
 | S-01       | paste-parse-summary      | North star — paste → AI parse → nutritional summary with missing flags      | done                  | Shipped. PR #13 merged.                                                                             |
 | S-02       | manual-recipe-entry      | Manual recipe creation path (fallback when AI fails)                        | done                  | Shipped. PR merged.                                                                                 |
-| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | done                  | Shipped as part of manual-recipe-entry.                                                             |
+| S-03       | save-recipe              | Save parsed / manual recipe to account                                      | done                  | Shipped. Atomic RPC + Save button on both Manual and AI parse flows.                                |
 | S-04       | list-saved-recipes       | List saved recipes chronologically                                          | done                  | Shipped as part of manual-recipe-entry.                                                             |
 | S-05       | edit-saved-recipe        | Edit a saved recipe's ingredient list (direct edits only)                   | no                    | Waits on S-04. Re-fetch F-02 on edit save (Open Roadmap Q #2 resolved). Parallel with S-06.        |
 | S-06       | delete-saved-recipe      | Delete a saved recipe (cascade delete recipe ingredients)                   | no                    | Waits on S-04. Parallel with S-05.                                                                  |
@@ -255,3 +255,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02 | manual-recipe-entry      | Manual entry `/recipes/new`, save to Supabase, `/recipes` list — FR-004, FR-007, FR-008         | 2026-06-03 |
 | S-03 | save-recipe              | Shipped as part of manual-recipe-entry                                                           | 2026-06-03 |
 | S-04 | list-saved-recipes       | Shipped as part of manual-recipe-entry                                                           | 2026-06-03 |
+| S-03 | save-recipe              | Atomic RPC save + Save button on AI parse and manual entry flows                                 | 2026-06-03 |
