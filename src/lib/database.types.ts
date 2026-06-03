@@ -83,6 +83,7 @@ export type Database = {
           title: string
           raw_text: string | null
           created_at: string
+          updated_at: string | null
           total_energy: number | null
           total_protein: number | null
           total_fat: number | null
@@ -99,6 +100,7 @@ export type Database = {
           title: string
           raw_text?: string | null
           created_at?: string
+          updated_at?: string | null
           total_energy?: number | null
           total_protein?: number | null
           total_fat?: number | null
@@ -115,6 +117,7 @@ export type Database = {
           title?: string
           raw_text?: string | null
           created_at?: string
+          updated_at?: string | null
           total_energy?: number | null
           total_protein?: number | null
           total_fat?: number | null

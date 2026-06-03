@@ -1,7 +1,7 @@
 ---
 id: edit-saved-recipe
 title: Edit Saved Recipe
-status: planned
+status: implementing
 created: 2026-06-03
 updated: 2026-06-03
 roadmap_ref: S-05
