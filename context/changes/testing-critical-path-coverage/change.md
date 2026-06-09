@@ -4,6 +4,7 @@ title: Critical-path integration coverage
 status: implementing
 created: 2026-06-09
 updated: 2026-06-09
+
 ---
 
 Phase 1 of the phased test rollout defined in context/foundation/test-plan.md.

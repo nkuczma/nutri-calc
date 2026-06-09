@@ -92,6 +92,24 @@ const EMPTY_NUTRIENTS: IngredientNutrients = {
   sodium: "missing",
 };
 
+export function aggregateNutrients(
+  results: IngredientNutrients[],
+): IngredientNutrients {
+  if (results.length === 0) {
+    throw new Error("aggregateNutrients requires at least one element");
+  }
+  const keys = Object.keys(results[0]) as (keyof IngredientNutrients)[];
+  return Object.fromEntries(
+    keys.map((key) => {
+      const values = results.map((r) => r[key]);
+      const total: NutrientValue = values.some((v) => v === "missing")
+        ? "missing"
+        : (values as number[]).reduce((sum, v) => sum + v, 0);
+      return [key, total];
+    }),
+  ) as unknown as IngredientNutrients;
+}
+
 export async function fetchNutrients(
   ingredientValue: string,
   weightGrams?: number,

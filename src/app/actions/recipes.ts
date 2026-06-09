@@ -8,8 +8,8 @@ import {
 } from "@/lib/db/recipes";
 import {
   fetchNutrients,
+  aggregateNutrients,
   type IngredientNutrients,
-  type NutrientValue,
 } from "@/lib/nutrition";
 import { convertToGrams } from "@/lib/unit-conversion";
 import type { Ingredient } from "@/lib/schemas/ingredient";
@@ -90,18 +90,7 @@ export async function updateRecipe(
   );
 
   // Step 3: aggregate totals — sum numerics, "missing" if any ingredient is missing for that field
-  const keys = Object.keys(
-    perIngredient[0] ?? allMissing,
-  ) as (keyof IngredientNutrients)[];
-  const totals: IngredientNutrients = Object.fromEntries(
-    keys.map((key) => {
-      const values = perIngredient.map((r) => r[key]);
-      const total: NutrientValue = values.some((v) => v === "missing")
-        ? "missing"
-        : (values as number[]).reduce((sum, v) => sum + v, 0);
-      return [key, total];
-    }),
-  ) as unknown as IngredientNutrients;
+  const totals = aggregateNutrients(perIngredient);
 
   // Step 4: convert to DB column shapes
   const p_totals = totalsToRecipeColumns(totals);

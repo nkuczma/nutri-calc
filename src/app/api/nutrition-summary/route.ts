@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchNutrients,
+  aggregateNutrients,
   NutritionApiError,
   type IngredientNutrients,
-  type NutrientValue,
 } from "@/lib/nutrition";
 import type { Ingredient } from "@/lib/schemas/ingredient";
 
@@ -39,16 +39,7 @@ export async function POST(req: Request) {
     return Response.json({ error: message }, { status: 502 });
   }
 
-  const keys = Object.keys(results[0]) as (keyof IngredientNutrients)[];
-  const aggregated = Object.fromEntries(
-    keys.map((key) => {
-      const values = results.map((r) => r[key]);
-      const total: NutrientValue = values.some((v) => v === "missing")
-        ? "missing"
-        : (values as number[]).reduce((sum, v) => sum + v, 0);
-      return [key, total];
-    }),
-  ) as unknown as IngredientNutrients;
+  const aggregated = aggregateNutrients(results);
 
   return Response.json({ nutrients: aggregated, perIngredient: results });
 }

@@ -466,25 +466,25 @@ other rows change.
 
 #### Automated
 
-- [x] 1.1 `npm test` exits 0 with at least 1 passing test
-- [x] 1.2 `npm run typecheck` passes after adding new files
-- [x] 1.3 `npm run lint` passes after adding new files
+- [x] 1.1 `npm test` exits 0 with at least 1 passing test — 55f41dd
+- [x] 1.2 `npm run typecheck` passes after adding new files — 55f41dd
+- [x] 1.3 `npm run lint` passes after adding new files — 55f41dd
 
 #### Manual
 
-- [x] 1.4 `npm test` completes in under 10 seconds locally on a cold start
+- [x] 1.4 `npm test` completes in under 10 seconds locally on a cold start — 55f41dd
 
 ### Phase 2: Extract and Test `aggregateNutrients`
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes with aggregate unit tests green
-- [ ] 2.2 `npm run typecheck` passes for both updated call sites
-- [ ] 2.3 `npm run lint` passes
+- [x] 2.1 `npm test` passes with aggregate unit tests green
+- [x] 2.2 `npm run typecheck` passes for both updated call sites
+- [x] 2.3 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.4 `/api/nutrition-summary` and recipe update flows behave identically to before the refactor
+- [x] 2.4 `/api/nutrition-summary` and recipe update flows behave identically to before the refactor
 
 ### Phase 3: Unit Tests — DB Boundary Adapters
 
