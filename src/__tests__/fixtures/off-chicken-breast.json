@@ -1,0 +1,19 @@
+{
+  "hits": [
+    {
+      "code": "0000000000001",
+      "product_name": "Chicken Breast",
+      "brands": "TestBrand",
+      "nutriments": {
+        "energy-kcal_100g": 165,
+        "proteins_100g": 31,
+        "fat_100g": 3.6,
+        "saturated-fat_100g": 1.1,
+        "carbohydrates_100g": 0,
+        "fiber_100g": 0,
+        "salt_100g": 0.2,
+        "sodium_100g": 0.08
+      }
+    }
+  ]
+}

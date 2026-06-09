@@ -490,17 +490,17 @@ other rows change.
 
 #### Automated
 
-- [x] 3.1 `npm test` passes with DB adapter tests green
-- [x] 3.2 All four adapter functions covered in both boundary directions
+- [x] 3.1 `npm test` passes with DB adapter tests green — b085598
+- [x] 3.2 All four adapter functions covered in both boundary directions — b085598
 
 ### Phase 4: MSW Fixture + `fetchNutrients` Tests
 
 #### Automated
 
-- [ ] 4.1 `npm test` passes with all four `fetchNutrients` cases green
-- [ ] 4.2 No real HTTP escapes MSW (`onUnhandledRequest: 'error'`)
-- [ ] 4.3 `npm run typecheck` passes
-- [ ] 4.4 `npm run lint` passes
+- [x] 4.1 `npm test` passes with all four `fetchNutrients` cases green
+- [x] 4.2 No real HTTP escapes MSW (`onUnhandledRequest: 'error'`)
+- [x] 4.3 `npm run typecheck` passes
+- [x] 4.4 `npm run lint` passes
 
 ### Phase 5: Sync Test-Plan and Cookbook
 
