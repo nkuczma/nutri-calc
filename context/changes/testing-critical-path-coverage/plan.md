@@ -506,9 +506,9 @@ other rows change.
 
 #### Automated
 
-- [x] 5.1 `npm run lint` passes
+- [x] 5.1 `npm run lint` passes — 33c9ea1
 
 #### Manual
 
-- [x] 5.2 §3 Phase 1 row reads `complete` in `test-plan.md`
-- [x] 5.3 §6.1 and §6.2 contain concrete patterns (not `TBD`)
+- [x] 5.2 §3 Phase 1 row reads `complete` in `test-plan.md` — 33c9ea1
+- [x] 5.3 §6.1 and §6.2 contain concrete patterns (not `TBD`) — 33c9ea1

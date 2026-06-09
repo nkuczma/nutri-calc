@@ -1,7 +1,7 @@
 ---
 id: testing-critical-path-coverage
 title: Critical-path integration coverage
-status: implementing
+status: implemented
 created: 2026-06-09
 updated: 2026-06-09
 
