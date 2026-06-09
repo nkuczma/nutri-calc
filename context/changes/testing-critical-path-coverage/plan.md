@@ -478,20 +478,20 @@ other rows change.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with aggregate unit tests green
-- [x] 2.2 `npm run typecheck` passes for both updated call sites
-- [x] 2.3 `npm run lint` passes
+- [x] 2.1 `npm test` passes with aggregate unit tests green — 620b041
+- [x] 2.2 `npm run typecheck` passes for both updated call sites — 620b041
+- [x] 2.3 `npm run lint` passes — 620b041
 
 #### Manual
 
-- [x] 2.4 `/api/nutrition-summary` and recipe update flows behave identically to before the refactor
+- [x] 2.4 `/api/nutrition-summary` and recipe update flows behave identically to before the refactor — 620b041
 
 ### Phase 3: Unit Tests — DB Boundary Adapters
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes with DB adapter tests green
-- [ ] 3.2 All four adapter functions covered in both boundary directions
+- [x] 3.1 `npm test` passes with DB adapter tests green
+- [x] 3.2 All four adapter functions covered in both boundary directions
 
 ### Phase 4: MSW Fixture + `fetchNutrients` Tests
 
