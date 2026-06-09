@@ -28,7 +28,13 @@
       "Bash(gh issue *)",
       "Bash(grep -v \"^$\")",
       "Bash(awk -F'/' '{print $1\"/\"$2\"/\"$3}')",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; print\\('\\\\n'.join\\(f'{k}: {v}' for k in ['next','typescript','vitest','jest','@playwright/test','@testing-library/react'] if k in deps\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; print\\('\\\\n'.join\\(f'{k}: {v}' for k in ['next','typescript','vitest','jest','@playwright/test','@testing-library/react'] if k in deps\\)\\)\")",
+      "Skill(10x-research)",
+      "Skill(10x-research:*)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(pbcopy)",
+      "Skill(10x-implement)",
+      "Skill(10x-implement:*)"
     ],
     "deny": [
       "Bash(rm -rf *)"
