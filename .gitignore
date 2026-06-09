@@ -47,6 +47,8 @@ next-env.d.ts
 .claude/**/10x-*
 .claude/**/m1l5-*
 .claude/**/skill-explainer*
+.claude/**/m3*
+.claude/**/10x*
 .github/**/10x-*
 .agents/**/10x-*
 .10x-**
