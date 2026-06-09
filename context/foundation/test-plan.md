@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-08 (Phase 1 change opened)
+> Last updated: 2026-06-09 (Phase 1 complete)
 
 ---
 
@@ -72,7 +72,7 @@ Change-folder as artifacts appear on disk.
 
 | # | Phase name | Goal | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration | change opened | context/changes/testing-critical-path-coverage/ |
+| 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration | complete | context/changes/testing-critical-path-coverage/ |
 | 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | not started | — |
 | 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | not started | — |
 | 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | not started | — |
@@ -89,8 +89,8 @@ MCP docs; see the grounding note at the end of this section.
 
 | Layer | Tool | Version | Notes |
 |---|---|---|---|
-| Unit + integration | Vitest | none yet — see §3 Phase 1 | Recommended for Next.js 16 + TypeScript; compatible with the App Router without the Jest transform setup overhead |
-| HTTP mocking | MSW (Mock Service Worker) | none yet — see §3 Phase 1 | Mock at the network edge only; never mock internal modules |
+| Unit + integration | Vitest | ^4.1.8 | Recommended for Next.js 16 + TypeScript; compatible with the App Router without the Jest transform setup overhead |
+| HTTP mocking | MSW (Mock Service Worker) | ^2.14.6 | Mock at the network edge only; never mock internal modules |
 | e2e | none yet | — | Not in scope for this rollout |
 | Accessibility | none yet | — | Not in scope for this rollout |
 
@@ -121,11 +121,31 @@ relevant rollout phase ships.
 
 ### 6.1 Adding a unit test
 
-TBD — see §3 Phase 1 (missing-flag and nutrition-mapping patterns).
+Pattern established in Phase 1. Use for pure functions with no I/O or framework dependencies.
+
+1. Place the test file under `src/__tests__/lib/<module-name>.test.ts`.
+2. Import the function directly: `import { myFn } from '@/lib/myModule'`.
+3. Construct fixture objects inline — never read expected values from the implementation.
+4. Derive expected values by hand from the oracle (PRD / domain rule), then hard-code them.
+5. Cover both boundary directions for any null ↔ application-type mapping.
+
+Examples:
+- `src/__tests__/lib/nutrition-aggregate.test.ts` — `aggregateNutrients`: all-numeric sum, any-missing propagation, single-item passthrough, empty-array throw.
+- `src/__tests__/lib/db-recipes.test.ts` — four DB adapter functions: null→"missing" (read path) and "missing"→null (write path) for all nine nutrient fields.
 
 ### 6.2 Adding an integration test
 
-TBD — see §3 Phase 1 (save/retrieve and nutrition pipeline patterns).
+Pattern established in Phase 1. Use when the function under test makes real HTTP calls that must be intercepted.
+
+1. Import `server` from `src/__tests__/setup.ts`.
+2. In `beforeEach` (or a per-test block), register a handler: `server.use(http.get(URL, () => HttpResponse.json(fixture)))`.
+3. Place fixture JSON under `src/__tests__/fixtures/`.
+4. Call the function under test normally — MSW intercepts the HTTP call transparently.
+5. Assert against values derived from the fixture by hand, not from the implementation.
+6. To override the default handler for a single test, call `server.use(...)` inside that `it` block — `afterEach` resets handlers automatically.
+
+Example:
+- `src/__tests__/lib/nutrition-fetch.test.ts` — `fetchNutrients` driven through the full OFF HTTP → extraction → scaling pipeline using `src/__tests__/fixtures/off-chicken-breast.json`.
 
 ### 6.3 Adding a security integration test
 

@@ -497,18 +497,18 @@ other rows change.
 
 #### Automated
 
-- [x] 4.1 `npm test` passes with all four `fetchNutrients` cases green
-- [x] 4.2 No real HTTP escapes MSW (`onUnhandledRequest: 'error'`)
-- [x] 4.3 `npm run typecheck` passes
-- [x] 4.4 `npm run lint` passes
+- [x] 4.1 `npm test` passes with all four `fetchNutrients` cases green — d167cf0
+- [x] 4.2 No real HTTP escapes MSW (`onUnhandledRequest: 'error'`) — d167cf0
+- [x] 4.3 `npm run typecheck` passes — d167cf0
+- [x] 4.4 `npm run lint` passes — d167cf0
 
 ### Phase 5: Sync Test-Plan and Cookbook
 
 #### Automated
 
-- [ ] 5.1 `npm run lint` passes
+- [x] 5.1 `npm run lint` passes
 
 #### Manual
 
-- [ ] 5.2 §3 Phase 1 row reads `complete` in `test-plan.md`
-- [ ] 5.3 §6.1 and §6.2 contain concrete patterns (not `TBD`)
+- [x] 5.2 §3 Phase 1 row reads `complete` in `test-plan.md`
+- [x] 5.3 §6.1 and §6.2 contain concrete patterns (not `TBD`)
