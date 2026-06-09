@@ -10,6 +10,8 @@
     "build:worker": "opennextjs-cloudflare build",
     "deploy": "opennextjs-cloudflare build && wrangler deploy",
     "preview": "opennextjs-cloudflare build && wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "supabase:link": "supabase link --project-ref zdflqcdikfpxdihrpcrx",
     "supabase:push": "supabase db push",
@@ -32,11 +34,15 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "msw": "^2.14.6",
     "supabase": "^2.102.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.8",
     "wrangler": "^4.94.0"
   }
 }
