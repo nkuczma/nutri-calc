@@ -34,7 +34,8 @@
       "Bash(echo \"exit:$?\")",
       "Bash(pbcopy)",
       "Skill(10x-implement)",
-      "Skill(10x-implement:*)"
+      "Skill(10x-implement:*)",
+      "Bash(echo \"--- lint exit: $?\")"
     ],
     "deny": [
       "Bash(rm -rf *)"
@@ -58,8 +59,12 @@
           {
             "type": "command",
             "command": "npm run lint",
-            "timeout": 60,
-            "statusMessage": "Linting..."
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "npm run typecheck",
+            "timeout": 60
           }
         ]
       }
