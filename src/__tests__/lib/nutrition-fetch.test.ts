@@ -52,6 +52,35 @@ describe("fetchNutrients", () => {
     expect(result.energy).toBe(0);
   });
 
+  it("Risk #2 — scaling — returns correct values for 200g", async () => {
+    const result = await fetchNutrients("chicken breast", 200);
+    expect(result.energy).toBe(330);
+    expect(result.protein).toBe(62);
+    expect(result.fat).toBe(7.2);
+  });
+
+  it("non-macro absent in fixture produces \"missing\" — fiber and salt", async () => {
+    server.use(
+      http.get(OFF_URL, () =>
+        HttpResponse.json({
+          hits: [
+            {
+              ...chickenFixture.hits[0],
+              nutriments: {
+                "energy-kcal_100g": 165,
+                "proteins_100g": 31,
+                "fat_100g": 3.6,
+              },
+            },
+          ],
+        }),
+      ),
+    );
+    const result = await fetchNutrients("chicken breast", 100);
+    expect(result.fiber).toBe("missing");
+    expect(result.salt).toBe("missing");
+  });
+
   it("zero products — returns EMPTY_NUTRIENTS shape", async () => {
     server.use(
       http.get(OFF_URL, () => HttpResponse.json({ hits: [] })),

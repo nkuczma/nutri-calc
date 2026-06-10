@@ -52,3 +52,6 @@ next-env.d.ts
 .github/**/10x-*
 .agents/**/10x-*
 .10x-**
+
+# stryker temp files
+.stryker-tmp
