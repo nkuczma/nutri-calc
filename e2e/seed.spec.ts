@@ -43,7 +43,7 @@ test("saved recipe persists in list after navigation — Risk #3 recipe data los
 
   await page.getByLabel("Recipe title").fill(title);
 
-  await page.getByLabel("Ingredient name 1").fill("chicken breast");
+  await page.getByLabel("Ingredient").fill("chicken breast");
 
   await page
     .getByRole("button", { name: "Get nutritional summary" })

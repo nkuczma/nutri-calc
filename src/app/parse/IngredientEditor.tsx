@@ -45,7 +45,7 @@ export function IngredientEditor({ parsed, onConfirm, disabled, weightGrams }: P
             <tr key={i}>
               <td className="py-1.5 pr-2">
                 <input
-                  aria-label={`Ingredient name ${i + 1}`}
+                  aria-label="Ingredient"
                   value={row.name}
                   onChange={e => update(i, 'name', e.target.value)}
                   className="w-full rounded border border-zinc-200 px-2 py-1 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"

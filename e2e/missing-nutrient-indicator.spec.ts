@@ -53,7 +53,7 @@ test("missing nutrient renders as — not 0 in the nutritional summary", async (
 
   await page.goto("/recipes/new");
 
-  await page.getByLabel("Ingredient name 1").fill("chicken breast");
+  await page.getByLabel("Ingredient").fill("chicken breast");
 
   await page
     .getByRole("button", { name: "Get nutritional summary" })
