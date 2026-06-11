@@ -53,11 +53,7 @@ test("missing nutrient renders as — not 0 in the nutritional summary", async (
 
   await page.goto("/recipes/new");
 
-  // Ingredient name — textbox index 0 (no Recipe title field on this page,
-  // since missing-nutrient-indicator doesn't need a title; it uses /recipes/new
-  // which has a Recipe title input at index 0, ingredient name at index 1)
-  // Use nth(1): 0 = recipe title input, 1 = first ingredient name input
-  await page.getByRole("textbox").nth(1).fill("chicken breast");
+  await page.getByLabel("Ingredient name 1").fill("chicken breast");
 
   await page
     .getByRole("button", { name: "Get nutritional summary" })

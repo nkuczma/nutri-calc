@@ -27,7 +27,7 @@ const NUTRIENT_FIXTURE = {
   ],
 };
 
-test("saved recipe appears in recipe list", async ({
+test("saved recipe persists in list after navigation — Risk #3 recipe data loss", async ({
   page,
 }) => {
   const title = `Seed Recipe ${Date.now()}`;
@@ -43,7 +43,7 @@ test("saved recipe appears in recipe list", async ({
 
   await page.getByLabel("Recipe title").fill(title);
 
-  await page.getByRole("textbox").nth(1).fill("chicken breast");
+  await page.getByLabel("Ingredient name 1").fill("chicken breast");
 
   await page
     .getByRole("button", { name: "Get nutritional summary" })

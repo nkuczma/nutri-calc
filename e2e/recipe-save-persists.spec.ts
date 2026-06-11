@@ -55,9 +55,7 @@ test("saved recipe appears in recipe list after navigation", async ({
 
   await page.getByLabel("Recipe title").fill(title);
 
-  // Ingredient name — nth(1): 0 = recipe title input, 1 = first ingredient name input
-  // (qty is type="number" so not matched by getByRole("textbox"))
-  await page.getByRole("textbox").nth(1).fill("chicken breast");
+  await page.getByLabel("Ingredient name 1").fill("chicken breast");
 
   await page
     .getByRole("button", { name: "Get nutritional summary" })
