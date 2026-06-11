@@ -72,7 +72,7 @@ Change-folder as artifacts appear on disk.
 
 | # | Phase name | Goal | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration | complete | context/changes/testing-critical-path-coverage/ |
+| 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration + e2e | complete | context/changes/testing-critical-path-coverage/ |
 | 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | not started | — |
 | 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | not started | — |
 | 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | not started | — |

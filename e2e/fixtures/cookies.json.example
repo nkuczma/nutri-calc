@@ -1,0 +1,11 @@
+[
+  {
+    "name": "sb-zdflqcdikfpxdihrpcrx-auth-token",
+    "value": "your-supabase-session-token",
+    "domain": "localhost",
+    "path": "/",
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]

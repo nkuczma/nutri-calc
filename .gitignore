@@ -55,3 +55,9 @@ next-env.d.ts
 
 # stryker temp files
 .stryker-tmp
+
+# Playwright
+/e2e/fixtures/auth.json
+/e2e/fixtures/cookies.json
+/playwright-report/
+/test-results/
