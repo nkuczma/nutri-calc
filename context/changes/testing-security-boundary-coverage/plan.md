@@ -180,12 +180,12 @@ Also update the Phase 2 row in §3 Phased Rollout table: set `Status` to `comple
 
 #### Automated
 
-- [x] 2.1 Both integration test files pass: `npm test -- src/__tests__/integration/`
-- [x] 2.2 Full suite passes: `npm test`
-- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.1 Both integration test files pass: `npm test -- src/__tests__/integration/` — 5e1ff62
+- [x] 2.2 Full suite passes: `npm test` — 5e1ff62
+- [x] 2.3 Lint passes: `npm run lint` — 5e1ff62
 
 #### Manual
 
-- [x] 2.4 Four passing tests across two new files visible in `npm test` output
-- [x] 2.5 §6.3 in test-plan.md no longer says "TBD" and contains a complete pattern
-- [x] 2.6 Phase 2 row in §3 shows `complete`
+- [x] 2.4 Four passing tests across two new files visible in `npm test` output — 5e1ff62
+- [x] 2.5 §6.3 in test-plan.md no longer says "TBD" and contains a complete pattern — 5e1ff62
+- [x] 2.6 Phase 2 row in §3 shows `complete` — 5e1ff62
