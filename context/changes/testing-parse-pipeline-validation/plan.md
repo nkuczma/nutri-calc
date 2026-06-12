@@ -156,20 +156,20 @@ Follow the existing `parse-auth.test.ts` pattern for mocking Next.js internals i
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npx vitest run src/__tests__/lib/ingredient-schema.test.ts`
-- [x] 1.2 Type checking passes: `npx tsc --noEmit`
-- [x] 1.3 Existing tests still pass: `npx vitest run`
+- [x] 1.1 Unit tests pass: `npx vitest run src/__tests__/lib/ingredient-schema.test.ts` — 7c340a1
+- [x] 1.2 Type checking passes: `npx tsc --noEmit` — 7c340a1
+- [x] 1.3 Existing tests still pass: `npx vitest run` — 7c340a1
 
 ### Phase 2: Runtime filter guard + integration test
 
 #### Automated
 
-- [ ] 2.1 Integration tests pass: `npx vitest run src/__tests__/integration/parse-pipeline-validation.test.ts`
-- [ ] 2.2 Full suite still passes: `npx vitest run`
-- [ ] 2.3 Type checking passes: `npx tsc --noEmit`
-- [ ] 2.4 Lint passes: `npm run lint`
+- [x] 2.1 Integration tests pass: `npx vitest run src/__tests__/integration/parse-pipeline-validation.test.ts`
+- [x] 2.2 Full suite still passes: `npx vitest run`
+- [x] 2.3 Type checking passes: `npx tsc --noEmit`
+- [x] 2.4 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.5 Zero-quantity ingredient after parse: no fetch fires in network tab
-- [ ] 2.6 Mixed valid/invalid: only valid ingredients reach nutrition fetch
+- [x] 2.5 Zero-quantity ingredient after parse: no fetch fires in network tab
+- [x] 2.6 Mixed valid/invalid: only valid ingredients reach nutrition fetch

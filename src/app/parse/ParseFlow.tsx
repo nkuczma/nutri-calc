@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
-import { parseResultSchema, type Ingredient } from '@/lib/schemas/ingredient';
+import { parseResultSchema, filterValidIngredients, type Ingredient } from '@/lib/schemas/ingredient';
 import type { IngredientNutrients } from '@/lib/nutrition';
 import { IngredientEditor } from './IngredientEditor';
 import { NutritionalSummary } from './NutritionalSummary';
@@ -53,6 +53,13 @@ export function ParseFlow() {
   }
 
   async function handleConfirm(rows: Ingredient[]) {
+    const validRows = filterValidIngredients(rows);
+    if (validRows.length === 0) {
+      setFetchingNutrients(false);
+      setNutritionDone(false);
+      return;
+    }
+
     setNutritionError(null);
     setNutrients(undefined);
     setFetchingNutrients(true);
@@ -62,7 +69,7 @@ export function ParseFlow() {
       const normalizeRes = await fetch('/api/normalize-units', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients: rows }),
+        body: JSON.stringify({ ingredients: validRows }),
       });
       const normalizeData = await normalizeRes.json();
       if (!normalizeRes.ok) throw new Error(normalizeData.error ?? 'Unit normalization failed');
@@ -72,7 +79,7 @@ export function ParseFlow() {
       const res = await fetch('/api/nutrition-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients: rows, weights }),
+        body: JSON.stringify({ ingredients: validRows, weights }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Nutrition fetch failed');
