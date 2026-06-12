@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-09 (Phase 1 complete)
+> Last updated: 2026-06-12 (Phase 3 complete; Phase 4 change opened)
 
 ---
 
@@ -74,8 +74,8 @@ Change-folder as artifacts appear on disk.
 |---|---|---|---|---|---|---|
 | 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration + e2e | complete | context/changes/testing-critical-path-coverage/ |
 | 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | complete | context/changes/testing-security-boundary-coverage/ |
-| 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | not started | — |
-| 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | not started | — |
+| 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | complete | context/changes/testing-parse-pipeline-validation/ |
+| 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | change opened | context/changes/testing-quality-gates-wiring/ |
 
 **Status vocabulary:** `not started` → `change opened` → `researched` → `planned` → `implementing` → `complete`
 
@@ -91,7 +91,9 @@ MCP docs; see the grounding note at the end of this section.
 |---|---|---|---|
 | Unit + integration | Vitest | ^4.1.8 | Recommended for Next.js 16 + TypeScript; compatible with the App Router without the Jest transform setup overhead |
 | HTTP mocking | MSW (Mock Service Worker) | ^2.14.6 | Mock at the network edge only; never mock internal modules |
-| e2e | none yet | — | Not in scope for this rollout |
+| e2e | Playwright | ^1.60.0 | App Router compatible; auth via `storageState`; `npm run test:e2e` |
+| Coverage | @vitest/coverage-v8 | ^4.1.8 | Istanbul-compatible coverage via V8; `vitest run --coverage` |
+| Mutation | Stryker (vitest-runner) | ^9.6.1 | Available but not yet wired to CI gates |
 | Accessibility | none yet | — | Not in scope for this rollout |
 
 **Stack grounding tools (current session):**
@@ -110,7 +112,7 @@ MCP docs; see the grounding note at the end of this section.
 | Unit + integration | local + CI | required after §3 Phase 1 | logic regressions, missing-flag violations, nutrition contract drift |
 | Security integration | CI on PR | required after §3 Phase 2 | data isolation regressions, auth bypass |
 | Parse validation unit | local + CI | required after §3 Phase 3 | malformed ingredient data reaching nutrition lookup |
-| Pre-prod smoke | manual | optional | environment-specific failures in Cloudflare Workers runtime |
+| Pre-prod smoke | automated (`e2e/auth.smoke.spec.ts`, `src/__tests__/smoke.test.ts`) | optional | environment-specific failures in Cloudflare Workers runtime |
 
 ---
 
@@ -219,8 +221,8 @@ TBD — see §3 Phase 3 (adversarial AI parse input patterns).
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-08
-- Stack versions last verified: 2026-06-08
+- Strategy (§1–§5) last reviewed: 2026-06-12
+- Stack versions last verified: 2026-06-12
 - AI-native tool references last verified: 2026-06-08
 
 Refresh (`/10x-test-plan --refresh`) when:
