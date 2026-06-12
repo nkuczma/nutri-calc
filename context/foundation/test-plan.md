@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-09 (Phase 1 complete)
+> Last updated: 2026-06-12 (Phase 3 complete; Phase 4 change opened)
 
 ---
 
@@ -73,9 +73,9 @@ Change-folder as artifacts appear on disk.
 | # | Phase name | Goal | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration + e2e | complete | context/changes/testing-critical-path-coverage/ |
-| 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | not started | — |
-| 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | not started | — |
-| 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | not started | — |
+| 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | complete | context/changes/testing-security-boundary-coverage/ |
+| 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | complete | context/changes/testing-parse-pipeline-validation/ |
+| 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | change opened | context/changes/testing-quality-gates-wiring/ |
 
 **Status vocabulary:** `not started` → `change opened` → `researched` → `planned` → `implementing` → `complete`
 
@@ -91,7 +91,9 @@ MCP docs; see the grounding note at the end of this section.
 |---|---|---|---|
 | Unit + integration | Vitest | ^4.1.8 | Recommended for Next.js 16 + TypeScript; compatible with the App Router without the Jest transform setup overhead |
 | HTTP mocking | MSW (Mock Service Worker) | ^2.14.6 | Mock at the network edge only; never mock internal modules |
-| e2e | none yet | — | Not in scope for this rollout |
+| e2e | Playwright | ^1.60.0 | App Router compatible; auth via `storageState`; `npm run test:e2e` |
+| Coverage | @vitest/coverage-v8 | ^4.1.8 | Istanbul-compatible coverage via V8; `vitest run --coverage` |
+| Mutation | Stryker (vitest-runner) | ^9.6.1 | Available but not yet wired to CI gates |
 | Accessibility | none yet | — | Not in scope for this rollout |
 
 **Stack grounding tools (current session):**
@@ -110,7 +112,7 @@ MCP docs; see the grounding note at the end of this section.
 | Unit + integration | local + CI | required after §3 Phase 1 | logic regressions, missing-flag violations, nutrition contract drift |
 | Security integration | CI on PR | required after §3 Phase 2 | data isolation regressions, auth bypass |
 | Parse validation unit | local + CI | required after §3 Phase 3 | malformed ingredient data reaching nutrition lookup |
-| Pre-prod smoke | manual | optional | environment-specific failures in Cloudflare Workers runtime |
+| Pre-prod smoke | automated (`e2e/auth.smoke.spec.ts`, `src/__tests__/smoke.test.ts`) | optional | environment-specific failures in Cloudflare Workers runtime |
 
 ---
 
@@ -149,7 +151,53 @@ Example:
 
 ### 6.3 Adding a security integration test
 
-TBD — see §3 Phase 2 (cross-user isolation and auth-boundary patterns).
+Pattern established in Phase 2. Use for auth-gated server actions and API route handlers.
+
+**Where to place the file:** `src/__tests__/integration/<concern>.test.ts`
+
+**How to mock the Supabase client:**
+
+```ts
+vi.mock('@/lib/supabase/server');
+import { createClient } from '@/lib/supabase/server';
+const mockCreateClient = vi.mocked(createClient);
+
+// In each test or beforeEach:
+mockCreateClient.mockResolvedValue({
+  auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+  from: vi.fn(), // add spies as needed
+} as never);
+```
+
+**How to mock `next/navigation` redirect** (required for server actions that call `redirect()`):
+
+```ts
+// Must appear before any imports that transitively import next/navigation
+vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
+```
+
+**What to assert for auth failures:**
+- Server actions: `expect(result).toEqual({ error: "Unauthorized" })`
+- Route handlers: `expect(response.status).toBe(401)` and `expect(await response.json()).toEqual({ error: "Unauthorized" })`
+
+**How to spy on query-builder arguments for ownership assertions:**
+
+The Supabase query builder is fluent (`.from().delete().eq().eq()`). Mock the chain as a thenable so `await` resolves, and spy on `eq` to assert filter values:
+
+```ts
+const eqSpy = vi.fn();
+const queryChain = {
+  eq: eqSpy,
+  then: (resolve) => resolve({ error: null }),
+};
+eqSpy.mockReturnValue(queryChain);
+const fromSpy = vi.fn().mockReturnValue({ delete: vi.fn().mockReturnValue({ eq: eqSpy }) });
+// Assert the ownership filter: expect(eqSpy).toHaveBeenCalledWith("user_id", authenticatedUserId)
+```
+
+Examples:
+- `src/__tests__/integration/recipes-isolation.test.ts` — unauthenticated + cross-user `deleteRecipe` (Risk #4)
+- `src/__tests__/integration/parse-auth.test.ts` — unauthenticated POST to parse route (Risk #7)
 
 ### 6.4 Adding a parse validation test
 
@@ -173,8 +221,8 @@ TBD — see §3 Phase 3 (adversarial AI parse input patterns).
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-08
-- Stack versions last verified: 2026-06-08
+- Strategy (§1–§5) last reviewed: 2026-06-12
+- Stack versions last verified: 2026-06-12
 - AI-native tool references last verified: 2026-06-08
 
 Refresh (`/10x-test-plan --refresh`) when:

@@ -326,3 +326,55 @@ The middleware runs on every non-static request. `supabase.auth.getUser()` makes
 - [x] 3.7 Session survives page refresh — e818c3a
 - [x] 3.8 Route guard redirects unauthenticated user to `/sign-in` — e818c3a
 - [x] 3.9 `/sign-in?error=oauth_failed` displays an error message — e818c3a
+
+---
+
+## Slice 4: Consolidate sign-in to a single screen
+
+### Problem
+
+Currently, logging in requires two clicks through visually similar screens:
+
+1. `/` (unauthenticated) — landing with a "Sign in with Google" **link** → navigates to `/sign-in`
+2. `/sign-in` — page with a "Sign in with Google" **button** → triggers the OAuth flow
+
+The link on the home page is redundant. Clicking it takes the user to an identical-looking screen with a button that does the same thing.
+
+### Decision
+
+Remove the intermediate `/` landing for unauthenticated users. When a signed-out user hits `/`, redirect them directly to `/sign-in`. The middleware already handles redirects for all other protected routes — extend its public-route allow-list logic so that `/` also redirects to `/sign-in` when unauthenticated.
+
+`/sign-in` remains the single sign-in surface and keeps the error-message display, the `<form action={signIn}>` button, and the app title.
+
+### Changes
+
+**`src/middleware.ts`** — Remove `/` from the public allow-list (or add an explicit unauthenticated-`/` redirect before the general allow-list check). Unauthenticated users who land on `/` should be redirected to `/sign-in`; authenticated users who land on `/` should not be redirected.
+
+**`src/app/page.tsx`** — Remove the unauthenticated branch entirely (the `if (!user)` block with the landing copy and the "Sign in with Google" link). The page now renders only the authenticated home view (recipes list). An unauthenticated visit will never reach this component — the middleware redirects it away first.
+
+**`src/app/sign-in/page.tsx`** — No structural changes. Optionally add the landing copy ("Know what's actually in your recipes…") above the button so the page serves as both landing and sign-in. This is a UX call — keep or drop the copy as preferred.
+
+### Invariants
+
+- Unauthenticated visit to `/` → redirect to `/sign-in` (not a double-redirect loop).
+- Authenticated visit to `/` → home page loads, no redirect.
+- Unauthenticated visit to `/sign-in` → page loads (no redirect loop).
+- Authenticated visit to `/sign-in` → redirect to `/` (prevent re-login).
+- Error query-params (`?error=…`) still display correctly on `/sign-in`.
+
+### Verification
+
+#### Automated
+
+- [ ] 4.1 Build passes: `npm run build`
+- [ ] 4.2 TypeScript compiles: `npx tsc --noEmit`
+- [ ] 4.3 Linting passes: `npm run lint`
+
+#### Manual
+
+- [ ] 4.4 Signed-out visit to `/` redirects to `/sign-in` in one step (no intermediate landing page)
+- [ ] 4.5 Signed-in visit to `/` shows the recipes list (no redirect)
+- [ ] 4.6 Sign-in button on `/sign-in` triggers Google OAuth (flow unchanged)
+- [ ] 4.7 After successful OAuth, user lands on `/` (home page)
+- [ ] 4.8 Signed-in visit to `/sign-in` redirects to `/`
+- [ ] 4.9 `/sign-in?error=oauth_failed` still displays the error message above the button
