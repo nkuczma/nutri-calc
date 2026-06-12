@@ -1,7 +1,7 @@
 ---
 change_id: testing-parse-pipeline-validation
 title: Parse pipeline validation — prove malformed AI-parsed data is caught before nutrition lookup
-status: implementing
+status: implemented
 created: 2026-06-12
 updated: 2026-06-12
 archived_at: null
