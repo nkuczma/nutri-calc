@@ -83,7 +83,11 @@ export async function updateRecipe(
       const weightGrams = w === "missing" ? undefined : w;
       try {
         return await fetchNutrients(ing.name, weightGrams);
-      } catch {
+      } catch (err) {
+        console.warn(
+          `[updateRecipe] fetchNutrients failed for "${ing.name}":`,
+          err instanceof Error ? err.message : err,
+        );
         return allMissing;
       }
     }),
