@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const ingredientSchema = z.object({
-  name: z.string().describe('Ingredient name, e.g. "chicken breast"'),
-  quantity: z.number().describe('Numeric amount, e.g. 2. Default to 1 if not stated.'),
+  name: z.string().min(1).describe('Ingredient name, e.g. "chicken breast"'),
+  quantity: z.number().positive().describe('Numeric amount, e.g. 2. Default to 1 if not stated.'),
   unit: z.string().describe('Unit of measure, e.g. "cups", "g", "tbsp". Empty string if not stated.'),
 });
 
