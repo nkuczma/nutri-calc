@@ -167,25 +167,25 @@ Also update the Phase 2 row in §3 Phased Rollout table: set `Status` to `comple
 
 #### Automated
 
-- [x] 1.1 Tests pass: `npm test -- src/__tests__/integration/recipes-isolation.test.ts`
-- [x] 1.2 Full suite still passes: `npm test`
-- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Tests pass: `npm test -- src/__tests__/integration/recipes-isolation.test.ts` — a413942
+- [x] 1.2 Full suite still passes: `npm test` — a413942
+- [x] 1.3 Lint passes: `npm run lint` — a413942
 
 #### Manual
 
-- [x] 1.4 Test output shows two passing cases with readable descriptions
-- [x] 1.5 No regressions in other test files confirmed by full suite run
+- [x] 1.4 Test output shows two passing cases with readable descriptions — a413942
+- [x] 1.5 No regressions in other test files confirmed by full suite run — a413942
 
 ### Phase 2: Parse-Route Auth Test + Cookbook Update
 
 #### Automated
 
-- [ ] 2.1 Both integration test files pass: `npm test -- src/__tests__/integration/`
-- [ ] 2.2 Full suite passes: `npm test`
-- [ ] 2.3 Lint passes: `npm run lint`
+- [x] 2.1 Both integration test files pass: `npm test -- src/__tests__/integration/`
+- [x] 2.2 Full suite passes: `npm test`
+- [x] 2.3 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Four passing tests across two new files visible in `npm test` output
-- [ ] 2.5 §6.3 in test-plan.md no longer says "TBD" and contains a complete pattern
-- [ ] 2.6 Phase 2 row in §3 shows `complete`
+- [x] 2.4 Four passing tests across two new files visible in `npm test` output
+- [x] 2.5 §6.3 in test-plan.md no longer says "TBD" and contains a complete pattern
+- [x] 2.6 Phase 2 row in §3 shows `complete`

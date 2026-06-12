@@ -73,7 +73,7 @@ Change-folder as artifacts appear on disk.
 | # | Phase name | Goal | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Critical-path integration coverage | Prove missing-flag invariant, nutrition computation, and save/retrieve are regression-safe; bootstrap the test runner | #1, #2, #3, #5 | unit + integration + e2e | complete | context/changes/testing-critical-path-coverage/ |
-| 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | not started | — |
+| 2 | Security boundary coverage | Prove data isolation and auth enforcement hold under adversarial access attempts | #4, #7 | integration | complete | context/changes/testing-security-boundary-coverage/ |
 | 3 | Parse pipeline validation | Prove malformed AI-parsed data is caught before reaching the nutrition lookup | #6 | unit + integration | not started | — |
 | 4 | Quality gates wiring | Lock lint + typecheck + integration suite as required CI gates on PRs | cross-cutting | CI config | not started | — |
 
@@ -149,7 +149,53 @@ Example:
 
 ### 6.3 Adding a security integration test
 
-TBD — see §3 Phase 2 (cross-user isolation and auth-boundary patterns).
+Pattern established in Phase 2. Use for auth-gated server actions and API route handlers.
+
+**Where to place the file:** `src/__tests__/integration/<concern>.test.ts`
+
+**How to mock the Supabase client:**
+
+```ts
+vi.mock('@/lib/supabase/server');
+import { createClient } from '@/lib/supabase/server';
+const mockCreateClient = vi.mocked(createClient);
+
+// In each test or beforeEach:
+mockCreateClient.mockResolvedValue({
+  auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+  from: vi.fn(), // add spies as needed
+} as never);
+```
+
+**How to mock `next/navigation` redirect** (required for server actions that call `redirect()`):
+
+```ts
+// Must appear before any imports that transitively import next/navigation
+vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
+```
+
+**What to assert for auth failures:**
+- Server actions: `expect(result).toEqual({ error: "Unauthorized" })`
+- Route handlers: `expect(response.status).toBe(401)` and `expect(await response.json()).toEqual({ error: "Unauthorized" })`
+
+**How to spy on query-builder arguments for ownership assertions:**
+
+The Supabase query builder is fluent (`.from().delete().eq().eq()`). Mock the chain as a thenable so `await` resolves, and spy on `eq` to assert filter values:
+
+```ts
+const eqSpy = vi.fn();
+const queryChain = {
+  eq: eqSpy,
+  then: (resolve) => resolve({ error: null }),
+};
+eqSpy.mockReturnValue(queryChain);
+const fromSpy = vi.fn().mockReturnValue({ delete: vi.fn().mockReturnValue({ eq: eqSpy }) });
+// Assert the ownership filter: expect(eqSpy).toHaveBeenCalledWith("user_id", authenticatedUserId)
+```
+
+Examples:
+- `src/__tests__/integration/recipes-isolation.test.ts` — unauthenticated + cross-user `deleteRecipe` (Risk #4)
+- `src/__tests__/integration/parse-auth.test.ts` — unauthenticated POST to parse route (Risk #7)
 
 ### 6.4 Adding a parse validation test
 
