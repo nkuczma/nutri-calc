@@ -46,7 +46,7 @@ export default async function RecipeDetailPage({ params }: Props) {
       <main className="mx-auto max-w-xl px-4 py-16">
         <div className="mb-6 flex items-center justify-between">
           <Link
-            href="/recipes"
+            href="/"
             className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
           >
             ← My recipes

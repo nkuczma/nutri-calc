@@ -134,5 +134,5 @@ export async function deleteRecipe(id: string): Promise<{ error?: string }> {
 
   if (error) return { error: error.message };
 
-  redirect("/recipes");
+  redirect("/");
 }
