@@ -69,7 +69,7 @@ export function ManualEntryFlow() {
     if (result.error) {
       setSaveError(result.error);
     } else {
-      router.push('/recipes');
+      router.push('/');
     }
   }
 
