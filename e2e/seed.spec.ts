@@ -55,13 +55,13 @@ test("saved recipe persists in list after navigation — Risk #3 recipe data los
 
   await page.getByRole("button", { name: "Save recipe" }).click();
 
-  await page.waitForURL("**/recipes");
+  await page.waitForURL("/");
   await expect(page.getByText(title)).toBeVisible();
 
   // Register before navigation — window.confirm fires synchronously on click
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByText(title).click();
   await page.getByRole("button", { name: "Delete recipe" }).click();
-  await page.waitForURL("**/recipes");
+  await page.waitForURL("/");
   await expect(page.getByText(title)).not.toBeVisible();
 });

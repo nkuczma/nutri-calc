@@ -1,13 +1,13 @@
-// Risk #3 — saved recipe persists and appears in /recipes list after navigation
+// Risk #3 — saved recipe persists and appears in the recipe list (/) after navigation
 // Proves the full path: ManualEntryFlow → saveRecipe Server Action → Supabase
-// write → /recipes SSR page reads it back and renders the title in the list.
+// write → / SSR page reads it back and renders the title in the list.
 //
 // This is the browser-level complement to the DB adapter unit tests; it catches
 // regressions where the save action succeeds but the list page fails to display
 // the entry, or where the Server Action swallows an error silently.
 //
 // Boundary: /api/normalize-units and /api/nutrition-summary are mocked.
-// saveRecipe (Server Action) and the /recipes read run against the real Supabase DB.
+// saveRecipe (Server Action) and the / read run against the real Supabase DB.
 
 import { test, expect } from "@playwright/test";
 
@@ -68,7 +68,7 @@ test("saved recipe appears in recipe list after navigation", async ({
   await page.getByRole("button", { name: "Save recipe" }).click();
 
   // --- Assertion: recipe appears in the list ---
-  await page.waitForURL("**/recipes");
+  await page.waitForURL("/");
   await expect(
     page.getByRole("link", { name: new RegExp(title) }),
   ).toBeVisible();
@@ -79,7 +79,7 @@ test("saved recipe appears in recipe list after navigation", async ({
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await page.getByRole("button", { name: "Delete recipe" }).click();
-  await page.waitForURL("**/recipes");
+  await page.waitForURL("/");
   await expect(
     page.getByRole("link", { name: new RegExp(title) }),
   ).not.toBeVisible();
